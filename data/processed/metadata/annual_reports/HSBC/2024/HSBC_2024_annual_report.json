@@ -1,0 +1,12 @@
+{
+  "company": "HSBC",
+  "ticker": "HSBA",
+  "sector": "banking",
+  "country": "UK",
+  "report_type": "annual_report",
+  "fiscal_year": 2024,
+  "source_url": "https://www.hsbc.com/-/files/hsbc/investors/hsbc-results/2024/annual/pdfs/hsbc-holdings-plc/250219-annual-report-and-accounts-2024.pdf",
+  "raw_pdf_path": "data/raw/annual_reports/HSBC/2024/HSBC_2024_annual_report.pdf",
+  "extracted_text_path": "data/processed/text/annual_reports/HSBC/2024/HSBC_2024_annual_report.txt",
+  "document_id": "HSBC_2024_annual_report"
+}

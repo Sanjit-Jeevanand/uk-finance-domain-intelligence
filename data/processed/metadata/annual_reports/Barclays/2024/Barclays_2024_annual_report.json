@@ -1,0 +1,12 @@
+{
+  "company": "Barclays",
+  "ticker": "BARC",
+  "sector": "banking",
+  "country": "UK",
+  "report_type": "annual_report",
+  "fiscal_year": 2024,
+  "source_url": "https://home.barclays/content/dam/home-barclays/documents/investor-relations/reports-and-events/annual-reports/2024/Barclays-Bank-UK-Annual-Report-2024.pdf",
+  "raw_pdf_path": "data/raw/annual_reports/Barclays/2024/Barclays_2024_annual_report.pdf",
+  "extracted_text_path": "data/processed/text/annual_reports/Barclays/2024/Barclays_2024_annual_report.txt",
+  "document_id": "Barclays_2024_annual_report"
+}

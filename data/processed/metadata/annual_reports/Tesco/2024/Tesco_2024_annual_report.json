@@ -1,0 +1,12 @@
+{
+  "company": "Tesco",
+  "ticker": "TSCO",
+  "sector": "retail",
+  "country": "UK",
+  "report_type": "annual_report",
+  "fiscal_year": 2024,
+  "source_url": "https://www.tescoplc.com/media/ky0bfwpo/tesco_ar25_interactive.pdf",
+  "raw_pdf_path": "data/raw/annual_reports/Tesco/2024/Tesco_2024_annual_report.pdf",
+  "extracted_text_path": "data/processed/text/annual_reports/Tesco/2024/Tesco_2024_annual_report.txt",
+  "document_id": "Tesco_2024_annual_report"
+}

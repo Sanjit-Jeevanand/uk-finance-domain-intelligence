@@ -1,0 +1,12 @@
+{
+  "company": "Lloyds Banking Group",
+  "ticker": "LLOY",
+  "sector": "banking",
+  "country": "UK",
+  "report_type": "annual_report",
+  "fiscal_year": 2024,
+  "source_url": "https://www.lloydsbankinggroup.com/assets/pdfs/investors/annual-report/2024/2024-lbg-annual-review.pdf",
+  "raw_pdf_path": "data/raw/annual_reports/Lloyds Banking Group/2024/Lloyds Banking Group_2024_annual_report.pdf",
+  "extracted_text_path": "data/processed/text/annual_reports/Lloyds Banking Group/2024/Lloyds Banking Group_2024_annual_report.txt",
+  "document_id": "Lloyds Banking Group_2024_annual_report"
+}

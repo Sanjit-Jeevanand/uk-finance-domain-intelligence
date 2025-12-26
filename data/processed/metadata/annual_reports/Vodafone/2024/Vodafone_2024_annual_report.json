@@ -1,0 +1,12 @@
+{
+  "company": "Vodafone",
+  "ticker": "VOD",
+  "sector": "telecom",
+  "country": "UK",
+  "report_type": "annual_report",
+  "fiscal_year": 2024,
+  "source_url": "https://data.fca.org.uk/artefacts/NSM/Portal/NI-000097578/NI-000097578.pdf",
+  "raw_pdf_path": "data/raw/annual_reports/Vodafone/2024/Vodafone_2024_annual_report.pdf",
+  "extracted_text_path": "data/processed/text/annual_reports/Vodafone/2024/Vodafone_2024_annual_report.txt",
+  "document_id": "Vodafone_2024_annual_report"
+}

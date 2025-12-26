@@ -1,0 +1,79 @@
+- company: HSBC
+  ticker: HSBA
+  sector: banking
+  country: UK
+  report_type: annual_report
+  fiscal_year: 2024
+  source: investor_relations
+  url: https://www.hsbc.com/-/files/hsbc/investors/hsbc-results/2024/annual/pdfs/hsbc-holdings-plc/250219-annual-report-and-accounts-2024.pdf
+  format: pdf
+
+- company: Barclays
+  ticker: BARC
+  sector: banking
+  country: UK
+  report_type: annual_report
+  fiscal_year: 2024
+  source: investor_relations
+  url: https://home.barclays/content/dam/home-barclays/documents/investor-relations/reports-and-events/annual-reports/2024/Barclays-Bank-UK-Annual-Report-2024.pdf
+  format: pdf
+
+- company: Lloyds Banking Group
+  ticker: LLOY
+  sector: banking
+  country: UK
+  report_type: annual_report
+  fiscal_year: 2024
+  source: investor_relations
+  url: https://www.lloydsbankinggroup.com/assets/pdfs/investors/annual-report/2024/2024-lbg-annual-review.pdf
+  format: pdf
+
+- company: NatWest Group
+  ticker: NWG
+  sector: banking
+  country: UK
+  report_type: annual_report
+  fiscal_year: 2024
+  source: investor_relations
+  url: https://www.investors.rbs.com/~/media/Files/R/RBS-IR-V2/results-center/14022025/nwg-annual-report-and-accounts-2024.pdf
+  format: pdf
+
+- company: BP
+  ticker: BP
+  sector: energy
+  country: UK
+  report_type: annual_report
+  fiscal_year: 2024
+  source: investor_relations
+  url: https://www.bp.com/content/dam/bp/business-sites/en/global/corporate/pdfs/investors/bp-annual-report-and-form-20f-2024.pdf
+  format: pdf
+
+- company: Shell
+  ticker: SHEL
+  sector: energy
+  country: UK
+  report_type: annual_report
+  fiscal_year: 2024
+  source: investor_relations
+  url: https://www.shell.com/investors/results-and-reporting/annual-report/_jcr_content/root/main/section_2113846431/link_list/links/item5.stream/1742873105897/80dd2a0664db6dc6ac1c376e9425ec9321fb9740/additional-information-ar24.pdf
+  format: pdf
+
+- company: Tesco
+  ticker: TSCO
+  sector: retail
+  country: UK
+  report_type: annual_report
+  fiscal_year: 2024
+  source: investor_relations
+  url: https://www.tescoplc.com/media/ky0bfwpo/tesco_ar25_interactive.pdf
+  format: pdf
+
+- company: Vodafone
+  ticker: VOD
+  sector: telecom
+  country: UK
+  report_type: annual_report
+  fiscal_year: 2024
+  source: investor_relations
+  url: https://data.fca.org.uk/artefacts/NSM/Portal/NI-000097578/NI-000097578.pdf
+  format: pdf

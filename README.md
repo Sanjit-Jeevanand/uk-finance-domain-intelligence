@@ -63,6 +63,19 @@ This project solves the problem of **answering natural-language questions over f
 
 ---
 
+# Data Sources
+
+This directory defines all external financial document sources used by the system.
+
+All ingested documents must:
+- Be publicly available
+- Be listed in configuration files
+- Carry traceable metadata (company, year, source)
+
+No document may be ingested unless it is declared here.
+
+---
+
 ## System Architecture
 
 High-level pipeline:

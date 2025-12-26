@@ -1,0 +1,12 @@
+{
+  "company": "BP",
+  "ticker": "BP",
+  "sector": "energy",
+  "country": "UK",
+  "report_type": "annual_report",
+  "fiscal_year": 2024,
+  "source_url": "https://www.bp.com/content/dam/bp/business-sites/en/global/corporate/pdfs/investors/bp-annual-report-and-form-20f-2024.pdf",
+  "raw_pdf_path": "data/raw/annual_reports/BP/2024/BP_2024_annual_report.pdf",
+  "extracted_text_path": "data/processed/text/annual_reports/BP/2024/BP_2024_annual_report.txt",
+  "document_id": "BP_2024_annual_report"
+}

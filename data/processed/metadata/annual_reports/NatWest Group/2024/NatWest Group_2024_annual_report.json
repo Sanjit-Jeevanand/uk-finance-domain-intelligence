@@ -1,0 +1,12 @@
+{
+  "company": "NatWest Group",
+  "ticker": "NWG",
+  "sector": "banking",
+  "country": "UK",
+  "report_type": "annual_report",
+  "fiscal_year": 2024,
+  "source_url": "https://www.investors.rbs.com/~/media/Files/R/RBS-IR-V2/results-center/14022025/nwg-annual-report-and-accounts-2024.pdf",
+  "raw_pdf_path": "data/raw/annual_reports/NatWest Group/2024/NatWest Group_2024_annual_report.pdf",
+  "extracted_text_path": "data/processed/text/annual_reports/NatWest Group/2024/NatWest Group_2024_annual_report.txt",
+  "document_id": "NatWest Group_2024_annual_report"
+}

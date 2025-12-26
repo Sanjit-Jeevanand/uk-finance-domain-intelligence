@@ -1,0 +1,12 @@
+{
+  "company": "Shell",
+  "ticker": "SHEL",
+  "sector": "energy",
+  "country": "UK",
+  "report_type": "annual_report",
+  "fiscal_year": 2024,
+  "source_url": "https://www.shell.com/investors/results-and-reporting/annual-report/_jcr_content/root/main/section_2113846431/link_list/links/item5.stream/1742873105897/80dd2a0664db6dc6ac1c376e9425ec9321fb9740/additional-information-ar24.pdf",
+  "raw_pdf_path": "data/raw/annual_reports/Shell/2024/Shell_2024_annual_report.pdf",
+  "extracted_text_path": "data/processed/text/annual_reports/Shell/2024/Shell_2024_annual_report.txt",
+  "document_id": "Shell_2024_annual_report"
+}
