@@ -12,8 +12,8 @@ from typing import List, Dict
 # Config (tune later if needed)
 # -----------------------------
 
-TARGET_CHARS = 4000        # ~800–1000 tokens depending on text
-OVERLAP_CHARS = 500
+TARGET_CHARS = 1200
+OVERLAP_CHARS = 150
 PAGE_MARKER_PATTERN = re.compile(r"\[PAGE (\d+)\]")
 
 
@@ -67,6 +67,16 @@ def split_by_pages(text: str) -> List[Dict]:
 
     return pages
 
+def split_text(text: str, max_chars: int) -> List[str]:
+    """
+    Split long text into hard-bounded fragments.
+    Ensures no fragment exceeds max_chars.
+    """
+    return [
+        text[i:i + max_chars]
+        for i in range(0, len(text), max_chars)
+    ]
+
 
 # -----------------------------
 # Core chunking logic
@@ -91,23 +101,26 @@ def chunk_pages(
         page_text = page["text"]
         page_number = page["page_number"]
 
-        buffer += "\n" + page_text
-        buffer_pages.append(page_number)
+        page_fragments = split_text(page_text, TARGET_CHARS)
 
-        if len(buffer) >= TARGET_CHARS:
-            chunk = build_chunk(
-                buffer,
-                buffer_pages,
-                document_metadata,
-                chunk_index
-            )
-            chunks.append(chunk)
+        for fragment in page_fragments:
+            buffer += "\n" + fragment
+            buffer_pages.append(page_number)
 
-            # overlap handling
-            buffer = buffer[-OVERLAP_CHARS:]
-            buffer_pages = buffer_pages[-1:]
+            while len(buffer) >= TARGET_CHARS:
+                chunk_text = buffer[:TARGET_CHARS]
 
-            chunk_index += 1
+                chunk = build_chunk(
+                    chunk_text,
+                    buffer_pages,
+                    document_metadata,
+                    chunk_index
+                )
+                chunks.append(chunk)
+
+                buffer = buffer[TARGET_CHARS - OVERLAP_CHARS:]
+                buffer_pages = buffer_pages[-1:]
+                chunk_index += 1
 
     # flush remainder
     if buffer.strip():
@@ -136,7 +149,7 @@ def build_chunk(
     return {
         "chunk_id": f"{document_metadata['company']}_{document_metadata['fiscal_year']}_{chunk_index}",
         "chunk_index": chunk_index,
-        "text": text.strip(),
+        "text": re.sub(r"\n{3,}", "\n\n", text.strip()),
 
         # traceability
         "page_start": min(page_numbers) if page_numbers else None,
