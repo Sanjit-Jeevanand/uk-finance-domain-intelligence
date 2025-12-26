@@ -15,7 +15,7 @@ This project is designed as a **hire-ready ML engineering portfolio project**, d
 - CI/CD
 - Cloud deployment
 
-The focus is on **correctness, traceability, and production realism**.
+The focus is on **correctness, traceability, and production realism, with deployment to Google Cloud Platform (GCP)**.
 
 ---
 
@@ -66,21 +66,21 @@ This project solves the problem of **answering natural-language questions over f
 ## System Architecture
 
 High-level pipeline:
-Document Ingestion
-↓
-Text Cleaning & Chunking
-↓
-Embedding Generation
-↓
-Vector Storage
-↓
-Semantic Retrieval (Top-K)
-↓
-LLM Answer Generation
-↓
-Cited Response Returned
 
-Each answer is generated **only from retrieved context**, with citations returned alongside the response.
+Document Ingestion  
+→ Text Cleaning & Normalization  
+→ Semantic Chunking  
+→ Embedding Generation  
+→ Vector Storage (with metadata)  
+→ Query Embedding  
+→ Top-K Semantic Retrieval  
+→ Context Assembly & Prompt Construction  
+→ LLM Answer Generation  
+→ Answer + Evidence Citations Returned  
+
+Each stage is explicit, modular, and independently debuggable.
+
+The LLM is **not** allowed to answer from prior knowledge alone — all responses must be grounded in retrieved context. If sufficient evidence is not found, the system must respond with uncertainty rather than hallucination.
 
 ---
 
@@ -161,19 +161,21 @@ Response:
 
 ## Deployment
 
-The service is fully containerized using Docker and can be run both locally and in the cloud.
+The service is fully containerized using Docker and deployed to **Google Cloud Platform (GCP)**.
 
 ### Local Run
-
 ```bash
 docker build -t uk-finance-dis .
 docker run -p 8000:8000 uk-finance-dis
 ```
 
-### Cloud Deployment
+### Cloud Deployment (GCP)
+The application is deployed on **GCP Cloud Run** using a container-first workflow:
+- Docker images are built via GitHub Actions
+- Images are pushed to **Google Artifact Registry**
+- Cloud Run pulls and serves the image as a managed, autoscaling service
 
-The application is deployed using modern cloud infrastructure with CI/CD automation.  
-Deployment artifacts are built via GitHub Actions and pushed to a container registry, then deployed to a managed cloud service.
+This setup provides a production-grade, serverless deployment model with minimal operational overhead.
 
 ---
 
@@ -187,6 +189,8 @@ This project includes an automated CI/CD pipeline that:
 - Produces a deployable artifact per commit
 
 This ensures reproducibility, reliability, and production readiness.
+
+After passing all CI checks, the pipeline produces a deployable container artifact that is compatible with **Google Cloud Run**, enabling automated or manual promotion to production on GCP.
 
 ---
 
@@ -237,6 +241,7 @@ uk-finance-domain-intelligence/
 
 Key design decisions are documented, including:
 
+- **Cloud Provider:** Google Cloud Platform (GCP), chosen for its strong ML ecosystem, managed container services (Cloud Run), and relevance to ML/AI engineering roles.
 - Choice of embedding model
 - Choice of LLM
 - Chunking strategy
