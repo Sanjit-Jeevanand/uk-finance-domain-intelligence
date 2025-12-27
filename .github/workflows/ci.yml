@@ -53,7 +53,19 @@ jobs:
             $REGISTRY/$IMAGE_NAME:${IMAGE_TAG}
 
       - name: Wait for API startup
-        run: sleep 10
+        run: |
+          echo "Waiting for API to become healthy..."
+          for i in {1..30}; do
+            if curl --fail http://localhost:8000/health; then
+              echo "API is up!"
+              exit 0
+            fi
+            echo "Still starting... ($i)"
+            sleep 2
+          done
+          echo "API failed to start in time"
+          docker logs finance-dis-test
+          exit 1
 
       - name: Health check
         run: |
