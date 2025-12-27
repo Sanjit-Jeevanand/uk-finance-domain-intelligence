@@ -12,7 +12,6 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: sanjit-jeevanand/uk-finance-domain-intelligence/finance-dis
 
 jobs:
   build-and-test:
@@ -33,12 +32,17 @@ jobs:
         id: vars
         run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
+      - name: Set image name (lowercase)
+        run: |
+          IMAGE_NAME_LOWER=$(echo "${{ github.repository }}/finance-dis" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=${IMAGE_NAME_LOWER}" >> $GITHUB_ENV
+
       - name: Build Docker image
-        run: docker build -t finance-dis:${IMAGE_TAG} .
+        run: docker build -t $IMAGE_NAME:${IMAGE_TAG} .
 
       - name: Tag & push image
         run: |
-          docker tag finance-dis:${IMAGE_TAG} $REGISTRY/$IMAGE_NAME:${IMAGE_TAG}
+          docker tag $IMAGE_NAME:${IMAGE_TAG} $REGISTRY/$IMAGE_NAME:${IMAGE_TAG}
           docker push $REGISTRY/$IMAGE_NAME:${IMAGE_TAG}
 
       - name: Run container
@@ -46,7 +50,7 @@ jobs:
           docker run -d \
             -p 8000:8000 \
             --name finance-dis-test \
-            finance-dis:${IMAGE_TAG}
+            $IMAGE_NAME:${IMAGE_TAG}
 
       - name: Wait for API startup
         run: sleep 10
