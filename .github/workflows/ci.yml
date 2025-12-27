@@ -10,6 +10,10 @@ permissions:
   contents: read
   packages: write
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: sanjit-jeevanand/uk-finance-domain-intelligence/finance-dis
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -17,9 +21,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Set image tag
-        run: echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
       
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -37,8 +38,8 @@ jobs:
 
       - name: Tag & push image
         run: |
-          docker tag finance-dis:${IMAGE_TAG} ghcr.io/${{ github.repository }}/finance-dis:${IMAGE_TAG}
-          docker push ghcr.io/${{ github.repository }}/finance-dis:${IMAGE_TAG}
+          docker tag finance-dis:${IMAGE_TAG} $REGISTRY/$IMAGE_NAME:${IMAGE_TAG}
+          docker push $REGISTRY/$IMAGE_NAME:${IMAGE_TAG}
 
       - name: Run container
         run: |
