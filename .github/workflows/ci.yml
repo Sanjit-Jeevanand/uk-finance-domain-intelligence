@@ -70,6 +70,10 @@ jobs:
       - name: Health check
         run: |
           curl --fail http://localhost:8000/health
+      
+      - name: Dump container logs
+        if: failure()
+        run: docker logs finance-dis-test
 
       - name: Stop container
         if: always()
