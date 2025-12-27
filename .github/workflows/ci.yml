@@ -50,7 +50,8 @@ jobs:
           docker run -d \
             -p 8000:8000 \
             --name finance-dis-test \
-            $REGISTRY/$IMAGE_NAME:${IMAGE_TAG}
+            -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+            $IMAGE_NAME:${IMAGE_TAG}
 
       - name: Wait for API startup
         run: |
