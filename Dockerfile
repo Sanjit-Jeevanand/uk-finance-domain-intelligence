@@ -2,6 +2,7 @@
 FROM python:3.12-slim AS builder
 
 WORKDIR /app
+ENV PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu
 
 # System deps (minimal)
 RUN apt-get update && apt-get install -y \
