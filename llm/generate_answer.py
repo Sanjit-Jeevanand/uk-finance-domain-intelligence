@@ -6,8 +6,8 @@ import hashlib
 import json
 from pathlib import Path
 import requests
+from openai import OpenAI
 
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 SYSTEM_PROMPT = """You are a financial analysis assistant answering questions over official company reports.
 
 Your task:
@@ -52,6 +52,9 @@ SOURCE [X] — Company, Document, Fiscal Year, Pages A–B
 CACHE_DIR = Path(".llm_cache")
 CACHE_DIR.mkdir(exist_ok=True)
 
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+client = OpenAI()
+
 def _prompt_hash(prompt: str) -> str:
     return hashlib.sha256(prompt.encode("utf-8")).hexdigest()
 
@@ -74,7 +77,7 @@ ASSISTANT:
 def generate_answer(
     question: str,
     evidence_context: str,
-    model: str = "gpt-oss:20b",
+    model: str = OPENAI_MODEL,
 ) -> Dict:
     """
     Generate a grounded answer using a local LLM.
@@ -119,24 +122,23 @@ def generate_answer(
         else:
             return cached_result
 
-    response = requests.post(
-        f"{OLLAMA_BASE_URL}/api/generate",
-        json={
-            "stream": False,
-            "prompt": prompt,
-            "model": model,
-            "options": {
-                "temperature": 0,
-                "top_p": 1,
-                "repeat_penalty": 1
+    response = client.responses.create(
+        model=model,
+        input=[
+            {
+                "role": "system",
+                "content": SYSTEM_PROMPT
+            },
+            {
+                "role": "user",
+                "content": f"CONTEXT:\n{evidence_context}\n\nQUESTION:\n{question}"
             }
-        }
+        ],
+        temperature=0,
+        max_output_tokens=600
     )
 
-    if response.status_code != 200:
-        raise RuntimeError(response.text)
-
-    output_text = response.json()["response"]
+    output_text = response.output_text
 
     if output_text.strip() == refusal_string:
         answer = refusal_string
