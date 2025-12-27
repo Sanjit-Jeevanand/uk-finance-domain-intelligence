@@ -1,0 +1,31 @@
+[
+  {
+    "test": {
+      "id": "Query_04",
+      "difficulty": "easy",
+      "category": "climate_risk",
+      "llm_request": {
+        "query": "How did Lloyds Banking Group assess climate transition risk in 2024?",
+        "company": "Lloyds Banking Group",
+        "fiscal_year": 2024,
+        "top_k": 3
+      },
+      "expected_behavior": "answer"
+    },
+    "evaluation": {
+      "id": "Query_04",
+      "difficulty": "easy",
+      "category": "climate_risk",
+      "refused": true,
+      "expected_behavior": "answer",
+      "allow_summarisation": true,
+      "allow_partial_sources": false,
+      "outcome": "FAIL",
+      "pass": false
+    },
+    "model_response": {
+      "answer": "I do not have enough information in the provided documents.",
+      "evidence": []
+    }
+  }
+]

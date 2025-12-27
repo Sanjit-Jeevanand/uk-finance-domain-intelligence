@@ -1,0 +1,226 @@
+[
+  {
+    "id": "Query_01",
+    "difficulty": "easy",
+    "category": "risk",
+
+    "llm_request": {
+      "query": "What funding and liquidity risks did Barclays highlight in 2024?",
+      "company": "Barclays",
+      "fiscal_year": 2024,
+      "top_k": 4
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_02",
+    "difficulty": "easy",
+    "category": "risk",
+
+    "llm_request": {
+      "query": "What economic crime risks did Lloyds Banking Group identify in 2024?",
+      "company": "Lloyds Banking Group",
+      "fiscal_year": 2024,
+      "top_k": 3
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_03",
+    "difficulty": "easy",
+    "category": "risk",
+
+    "llm_request": {
+      "query": "What technology or cyber risks did Barclays mention in 2024?",
+      "company": "Barclays",
+      "fiscal_year": 2024,
+      "top_k": 4
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_04",
+    "difficulty": "easy",
+    "category": "climate_risk",
+
+    "llm_request": {
+      "query": "How did Lloyds Banking Group assess climate transition risk in 2024?",
+      "company": "Lloyds Banking Group",
+      "fiscal_year": 2024,
+      "top_k": 3
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_05",
+    "difficulty": "easy",
+    "category": "geopolitical_risk",
+
+    "llm_request": {
+      "query": "What geopolitical risks did HSBC highlight in 2024?",
+      "company": "HSBC",
+      "fiscal_year": 2024,
+      "top_k": 4
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_06",
+    "difficulty": "medium",
+    "category": "risk",
+
+    "llm_request": {
+      "query": "What were the main macroeconomic risks Barclays identified in 2024?",
+      "company": "Barclays",
+      "fiscal_year": 2024,
+      "top_k": 5
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_07",
+    "difficulty": "medium",
+    "category": "risk",
+
+    "llm_request": {
+      "query": "How did Lloyds Banking Group describe liquidity risk in 2024?",
+      "company": "Lloyds Banking Group",
+      "fiscal_year": 2024,
+      "top_k": 4
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_08",
+    "difficulty": "medium",
+    "category": "climate_risk",
+
+    "llm_request": {
+      "query": "What physical and transition climate risks did HSBC identify in 2024?",
+      "company": "HSBC",
+      "fiscal_year": 2024,
+      "top_k": 5
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_09",
+    "difficulty": "medium",
+    "category": "operational_risk",
+
+    "llm_request": {
+      "query": "What operational risks related to technology and suppliers did Lloyds Banking Group report in 2024?",
+      "company": "Lloyds Banking Group",
+      "fiscal_year": 2024,
+      "top_k": 4
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_10",
+    "difficulty": "medium",
+    "category": "geopolitical_risk",
+
+    "llm_request": {
+      "query": "How did HSBC describe the impact of geopolitical tensions on its business in 2024?",
+      "company": "HSBC",
+      "fiscal_year": 2024,
+      "top_k": 5
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_11",
+    "difficulty": "hard",
+    "category": "risk_interactions",
+
+    "llm_request": {
+      "query": "How did Barclays describe the interaction between market volatility and liquidity risk in 2024?",
+      "company": "Barclays",
+      "fiscal_year": 2024,
+      "top_k": 6
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_12",
+    "difficulty": "hard",
+    "category": "climate_financial_risk",
+
+    "llm_request": {
+      "query": "What financial risks could climate transition and physical risks pose to HSBC’s balance sheet in 2024?",
+      "company": "HSBC",
+      "fiscal_year": 2024,
+      "top_k": 6
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_13",
+    "difficulty": "hard",
+    "category": "geopolitical_credit_risk",
+
+    "llm_request": {
+      "query": "How did HSBC explain the impact of geopolitical tensions on credit risk and customer exposures in 2024?",
+      "company": "HSBC",
+      "fiscal_year": 2024,
+      "top_k": 6
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_14",
+    "difficulty": "hard",
+    "category": "operational_resilience",
+
+    "llm_request": {
+      "query": "What risks did Lloyds Banking Group identify related to operational resilience and technology failures in 2024?",
+      "company": "Lloyds Banking Group",
+      "fiscal_year": 2024,
+      "top_k": 6
+    },
+
+    "expected_behavior": "answer"
+  },
+
+  {
+    "id": "Query_15",
+    "difficulty": "hard",
+    "category": "model_and_estimation_risk",
+
+    "llm_request": {
+      "query": "What risks did HSBC highlight related to the use of models, estimates, and judgement in its financial reporting in 2024?",
+      "company": "HSBC",
+      "fiscal_year": 2024,
+      "top_k": 6
+    },
+
+    "expected_behavior": "answer"
+  }
+]

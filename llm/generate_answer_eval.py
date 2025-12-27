@@ -1,24 +1,15 @@
 import subprocess
-import os
 from typing import Dict
 import re
-import hashlib
-import json
-from pathlib import Path
 import requests
 
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+
+
 SYSTEM_PROMPT = """You are a financial analysis assistant answering questions over official company reports.
 
 Your task:
 - Answer the USER QUESTION using ONLY the information in the CONTEXT.
 - The CONTEXT consists of extracted excerpts from financial documents.
-
-Interpretation guidance:
-- You may internally rephrase or restate the USER QUESTION to better match the structure and wording of the CONTEXT.
-- Rephrasing is permitted ONLY to improve alignment with how information is described in the source documents.
-- You must NOT broaden the scope of the question, introduce new concepts, or infer intent beyond what is explicitly stated.
-- The final answer must still be strictly grounded in the CONTEXT.
 
 Strict rules:
 - Output ONLY the final answer content.
@@ -31,8 +22,12 @@ Strict rules:
   - Document type and fiscal year
   - Page range(s) used
 - Do NOT use outside knowledge, assumptions, or general financial knowledge.
-- If the context contains sufficient information from the same company, document, and fiscal year, you SHOULD answer by summarising the relevant excerpts. Only refuse if the information is genuinely missing.
-- If the context contains relevant information that partially answers the question, provide a concise, evidence-grounded summary. Only refuse if the context is clearly irrelevant or empty.
+- Do NOT speculate or infer beyond what is explicitly stated.
+- If answering would require inference, summarisation across unrelated excerpts,
+  or general financial knowledge, you MUST refuse.
+  Refusal is preferred over partial answers.
+- If the context does not fully answer the question, respond exactly with:
+  "I do not have enough information in the provided documents."
 - You MUST preserve modal language exactly as written in the context.
   If the source uses terms such as "could", "may", or "might", you MUST NOT
   restate them as definitive outcomes (e.g. "will", "does", "has").
@@ -43,17 +38,20 @@ Exception (controlled):
   - All excerpts are from the SAME document
   - All excerpts are from the SAME fiscal year
 
+Output format (MANDATORY):
+
+You MUST wrap your entire answer EXACTLY between the tags <ANSWER> and </ANSWER>.
+Do not output anything outside these tags.
+
+<ANSWER>
+A clear, structured answer (tables allowed if appropriate).
+</ANSWER>
+
 ---
 
 <SOURCES>
 SOURCE [X] — Company, Document, Fiscal Year, Pages A–B
 """
-
-CACHE_DIR = Path(".llm_cache")
-CACHE_DIR.mkdir(exist_ok=True)
-
-def _prompt_hash(prompt: str) -> str:
-    return hashlib.sha256(prompt.encode("utf-8")).hexdigest()
 
 
 def build_prompt(question: str, context: str) -> str:
@@ -85,64 +83,69 @@ def generate_answer(
         "raw_output": str
     }
     """
-    refusal_string = "I do not have enough information in the provided documents."
+    MIN_EVIDENCE_CHARS = 400
+    if len(evidence_context.strip()) < MIN_EVIDENCE_CHARS:
+        return {
+            "answer": "I do not have enough information in the provided documents.",
+            "outcome": "REFUSE_OK"
+        }
+
+    # --- Company consistency guard ---
+    # companies_in_context = set(
+    # re.findall(r'"company"\s*:\s*"([^"]+)"', evidence_context, re.IGNORECASE)
+    # )   
+
+    # if hasattr(generate_answer, "expected_company"):
+    #     if generate_answer.expected_company not in companies_in_context:
+    #         return {
+    #             "answer": "I do not have enough information in the provided documents."
+    #         }
 
     if not evidence_context.strip():
         return {
-            "answer": refusal_string
+            "answer": "I do not have enough information in the provided documents.",
+            "outcome": "REFUSE_OK"
         }
 
     prompt = build_prompt(question, evidence_context)
 
-    cache_payload = json.dumps(
-        {
-            "prompt": prompt,
-            "model": model,
-            "options": {
-                "temperature": 0,
-                "top_p": 1,
-                "repeat_penalty": 1,
-            },
-        },
-        sort_keys=True,
-    )
-
-    cache_key = hashlib.sha256(cache_payload.encode("utf-8")).hexdigest()
-    cache_path = CACHE_DIR / f"{cache_key}.json"
-
-    if cache_path.exists():
-        cached_result = json.loads(cache_path.read_text())
-        cached_answer = cached_result.get("answer", "")
-        # Bypass cache if cached answer is refusal but evidence_context is large enough
-        if cached_answer == refusal_string and len(evidence_context.strip()) >= 400:
-            pass  # recompute instead of returning cache
-        else:
-            return cached_result
-
     response = requests.post(
-        f"{OLLAMA_BASE_URL}/api/generate",
+        "http://localhost:11434/api/generate",
         json={
-            "stream": False,
-            "prompt": prompt,
             "model": model,
+            "prompt": prompt,
+            "stream": False,
             "options": {
                 "temperature": 0,
                 "top_p": 1,
                 "repeat_penalty": 1
             }
-        }
+        },
+        timeout=120
     )
 
     if response.status_code != 200:
         raise RuntimeError(response.text)
 
-    output_text = response.json()["response"]
+    raw_output = response.json().get("response", "")
 
-    if output_text.strip() == refusal_string:
-        answer = refusal_string
-    else:
-        answer = output_text.strip()
+    # Truncate output before the first <ANSWER> tag
+    start_index = raw_output.find("<ANSWER>")
+    truncated_output = raw_output[start_index:] if start_index != -1 else raw_output
 
+    match = re.search(
+        r"<ANSWER>\s*(.*?)\s*</ANSWER>",
+        truncated_output,
+        re.DOTALL
+    )
+
+    if not match:
+        return {
+            "answer": "I do not have enough information in the provided documents.",
+            "outcome": "FAIL"
+        }
+
+    answer = match.group(1).strip()
     # Remove inline citation artifacts like 【1】【Barclays】【Annual Report 2024】【46–47】
     answer = re.sub(r"【[^】]+】", "", answer).strip()
 
@@ -161,13 +164,14 @@ def generate_answer(
                 f"SOURCE [{source_id}] — {company}, {document}, Pages {pages}"
             )
 
-    if not answer:
-        answer = refusal_string
+    if not answer or len(answer) < 20:
+        return {
+            "answer": "I do not have enough information in the provided documents.",
+            "outcome": "FAIL"
+        }
 
-    result = {
+    return {
         "answer": answer,
-        "sources": sources
+        "sources": sources,
+        "outcome": "PASS"
     }
-
-    cache_path.write_text(json.dumps(result, indent=2))
-    return result

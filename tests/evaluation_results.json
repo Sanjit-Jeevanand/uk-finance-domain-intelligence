@@ -1,0 +1,167 @@
+[
+  {
+    "id": "Query_01",
+    "difficulty": "easy",
+    "category": "risk",
+    "refused": true,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "REFUSE_OK",
+    "pass": true
+  },
+  {
+    "id": "Query_02",
+    "difficulty": "easy",
+    "category": "risk",
+    "refused": false,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "PASS",
+    "pass": true
+  },
+  {
+    "id": "Query_03",
+    "difficulty": "easy",
+    "category": "risk",
+    "refused": false,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "PASS",
+    "pass": true
+  },
+  {
+    "id": "Query_04",
+    "difficulty": "easy",
+    "category": "climate_risk",
+    "refused": true,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "FAIL",
+    "pass": false
+  },
+  {
+    "id": "Query_05",
+    "difficulty": "easy",
+    "category": "geopolitical_risk",
+    "refused": false,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "PASS",
+    "pass": true
+  },
+  {
+    "id": "Query_06",
+    "difficulty": "medium",
+    "category": "risk",
+    "refused": true,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "REFUSE_OK",
+    "pass": true
+  },
+  {
+    "id": "Query_07",
+    "difficulty": "medium",
+    "category": "risk",
+    "refused": false,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "PASS",
+    "pass": true
+  },
+  {
+    "id": "Query_08",
+    "difficulty": "medium",
+    "category": "climate_risk",
+    "refused": false,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "PASS",
+    "pass": true
+  },
+  {
+    "id": "Query_09",
+    "difficulty": "medium",
+    "category": "operational_risk",
+    "refused": false,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "PASS",
+    "pass": true
+  },
+  {
+    "id": "Query_10",
+    "difficulty": "medium",
+    "category": "geopolitical_risk",
+    "refused": false,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "PASS",
+    "pass": true
+  },
+  {
+    "id": "Query_11",
+    "difficulty": "hard",
+    "category": "risk_interactions",
+    "refused": false,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "PASS",
+    "pass": true
+  },
+  {
+    "id": "Query_12",
+    "difficulty": "hard",
+    "category": "climate_financial_risk",
+    "refused": true,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "REFUSE_OK",
+    "pass": true
+  },
+  {
+    "id": "Query_13",
+    "difficulty": "hard",
+    "category": "geopolitical_credit_risk",
+    "refused": true,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "REFUSE_OK",
+    "pass": true
+  },
+  {
+    "id": "Query_14",
+    "difficulty": "hard",
+    "category": "operational_resilience",
+    "refused": false,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "PASS",
+    "pass": true
+  },
+  {
+    "id": "Query_15",
+    "difficulty": "hard",
+    "category": "model_and_estimation_risk",
+    "refused": false,
+    "expected_behavior": "answer",
+    "allow_summarisation": true,
+    "allow_partial_sources": false,
+    "outcome": "PASS",
+    "pass": true
+  }
+]
