@@ -12,6 +12,9 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+  AR_REGION: europe-west1
+  AR_PROJECT: finance-dis-prod
+  AR_REPO: finance-dis
 
 jobs:
   build-and-test:
@@ -28,6 +31,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Authenticate to Google Artifact Registry
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker $AR_REGION-docker.pkg.dev
+
       - name: Set image tag
         id: vars
         run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
@@ -38,12 +49,26 @@ jobs:
           echo "IMAGE_NAME=${IMAGE_NAME_LOWER}" >> $GITHUB_ENV
 
       - name: Build Docker image
-        run: docker build -t $IMAGE_NAME:${IMAGE_TAG} .
-
-      - name: Tag & push image
         run: |
+          docker build \
+            -t $IMAGE_NAME:${IMAGE_TAG} \
+            -t $IMAGE_NAME:latest \
+            .
+
+      - name: Tag & push image to GHCR and Artifact Registry
+        run: |
+          # GHCR
           docker tag $IMAGE_NAME:${IMAGE_TAG} $REGISTRY/$IMAGE_NAME:${IMAGE_TAG}
+          docker tag $IMAGE_NAME:latest $REGISTRY/$IMAGE_NAME:latest
           docker push $REGISTRY/$IMAGE_NAME:${IMAGE_TAG}
+          docker push $REGISTRY/$IMAGE_NAME:latest
+
+          # Artifact Registry
+          AR_IMAGE=$AR_REGION-docker.pkg.dev/$AR_PROJECT/$AR_REPO/finance-dis
+          docker tag $IMAGE_NAME:${IMAGE_TAG} $AR_IMAGE:${IMAGE_TAG}
+          docker tag $IMAGE_NAME:latest $AR_IMAGE:latest
+          docker push $AR_IMAGE:${IMAGE_TAG}
+          docker push $AR_IMAGE:latest
 
       - name: Run container
         run: |
