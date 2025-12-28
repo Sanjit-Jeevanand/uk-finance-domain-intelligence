@@ -82,3 +82,18 @@ jobs:
             --timeout=900 \
             --min-instances=1 \
             --concurrency=1 \
+
+      - name: Deploy UI to Cloud Run
+        run: |
+          gcloud run deploy finance-dis-ui \
+            --image=$AR_REGION-docker.pkg.dev/$AR_PROJECT/$AR_REPO/finance-dis:latest \
+            --region=$AR_REGION \
+            --platform=managed \
+            --service=finance-dis-ui \
+            --port=8501 \
+            --allow-unauthenticated \
+            --memory=2Gi \
+            --cpu=1 \
+            --timeout=300 \
+            --min-instances=0 \
+            --set-env-vars=API_BASE_URL=https://finance-dis-<PROJECT_NUMBER>.europe-west1.run.app  # Replace <PROJECT_NUMBER> with your GCP project number

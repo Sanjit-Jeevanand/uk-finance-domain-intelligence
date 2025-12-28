@@ -3,7 +3,7 @@ import streamlit as st
 import requests
 import re
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8001")
+API_BASE_URL = "https://finance-dis-521270728838.europe-west1.run.app"
 
 st.title("UK Finance Domain Intelligence")
 st.write("Ask questions about UK finance data and get answers with cited evidence.")
