@@ -15,8 +15,18 @@ COPY requirements.txt .
 RUN pip install --upgrade pip \
  && pip install --no-cache-dir -r requirements.txt
 
+# Preload sentence-transformers model at build time to avoid runtime downloads
+RUN python - <<EOF
+from sentence_transformers import SentenceTransformer
+SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+EOF
+
 # ---------- Stage 2: runtime ----------
 FROM python:3.12-slim
+
+# Force transformers to run in offline mode at runtime
+ENV TRANSFORMERS_OFFLINE=1
+ENV HF_HUB_OFFLINE=1
 
 # Create non-root user
 RUN useradd -m appuser
