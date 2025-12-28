@@ -1,5 +1,12 @@
 # 🇬🇧 UK Finance Domain Intelligence System (DIS)
 
+## 🚀 Live Deployment
+
+- **API (Cloud Run):** https://finance-dis-521270728838.europe-west1.run.app
+- **Web UI (Streamlit):** https://finance-dis-ui-521270728838.europe-west1.run.app
+
+The system is fully deployed on Google Cloud Platform using a container-first workflow.
+
 ## Overview
 
 The **UK Finance Domain Intelligence System (DIS)** is an end-to-end AI/ML project that enables **question answering over real UK financial documents** using **retrieval-augmented generation (RAG)**.
@@ -78,22 +85,31 @@ No document may be ingested unless it is declared here.
 
 ## System Architecture
 
-High-level pipeline:
+### High-Level Architecture
 
-Document Ingestion  
-→ Text Cleaning & Normalization  
-→ Semantic Chunking  
-→ Embedding Generation  
-→ Vector Storage (with metadata)  
-→ Query Embedding  
-→ Top-K Semantic Retrieval  
-→ Context Assembly & Prompt Construction  
-→ LLM Answer Generation  
-→ Answer + Evidence Citations Returned  
+```
+User (Browser)
+   ↓
+Streamlit Web UI (Cloud Run)
+   ↓
+FastAPI RAG Service (Cloud Run)
+   ↓
+FAISS Vector Store (in-container)
+   ↓
+OpenAI LLM (Responses API)
+```
 
-Each stage is explicit, modular, and independently debuggable.
+### Retrieval-Augmented Generation (RAG) Flow
 
-The LLM is **not** allowed to answer from prior knowledge alone — all responses must be grounded in retrieved context. If sufficient evidence is not found, the system must respond with uncertainty rather than hallucination.
+1. User submits a natural-language question via the UI or API
+2. The query is embedded using a sentence-transformer model
+3. FAISS performs top-K semantic similarity search
+4. Retrieved chunks are filtered by metadata (company, fiscal year)
+5. Evidence context is constructed from source documents
+6. The LLM is prompted to answer **only from retrieved evidence**
+7. The response is returned with cited document sources
+
+If no sufficient evidence is found, the system responds with uncertainty rather than hallucinating.
 
 ---
 
@@ -124,6 +140,31 @@ The LLM is **not** allowed to answer from prior knowledge alone — all response
 - Dockerized application
 - CI/CD via GitHub Actions
 - Deployed to cloud infrastructure
+
+---
+
+## Tech Stack
+
+### Frontend
+- Streamlit (Python)
+
+### Backend
+- FastAPI
+- Python 3.12
+
+### Retrieval & ML
+- Sentence Transformers (MiniLM)
+- FAISS (vector similarity search)
+- Metadata-based filtering
+
+### LLM
+- OpenAI Responses API
+
+### Infrastructure & DevOps
+- Docker
+- Google Cloud Run
+- Google Artifact Registry
+- GitHub Actions (CI/CD)
 
 ---
 
@@ -169,6 +210,17 @@ Response:
   ]
 }
 ```
+
+---
+
+## Example Queries
+
+- "Summarise the liquidity risks Barclays highlighted in 2024."
+- "What economic crime risks did Lloyds Banking Group report?"
+- "What funding risks were common across UK banks in 2024?"
+- "Did the report mention cybersecurity-related risks?"
+
+Each response is grounded in retrieved documents and includes explicit source citations.
 
 ---
 
@@ -225,22 +277,22 @@ The focus is on system correctness rather than benchmark scores.
 
 ```
 uk-finance-domain-intelligence/
-├── app/
-│   ├── api.py
-│   ├── rag_pipeline.py
-│   └── schemas.py
-├── ingestion/
-│   ├── loaders/
-│   ├── cleaners/
-│   └── chunking.py
-├── embeddings/
-│   └── embedder.py
-├── vector_store/
-│   └── store.py
-├── evaluation/
-│   └── sample_queries.json
+├── api/
+│   ├── main.py
+│   ├── routes.py
+│   └── services/
+│       └── rag_service.py
+├── retrieval/
+│   ├── embed_query.py
+│   ├── similarity_search.py
+│   ├── filters.py
+│   └── build_evidence.py
+├── ui/
+│   ├── app.py
+│   └── requirements.txt
 ├── docker/
-│   └── Dockerfile
+│   ├── Dockerfile.api
+│   └── Dockerfile.ui
 ├── .github/
 │   └── workflows/
 │       └── ci.yml
@@ -272,7 +324,6 @@ After the core system is complete, potential extensions include:
 - Additional UK financial document sources
 - Re-ranking and hybrid retrieval
 - Query decomposition
-- Frontend UI
 - Observability and monitoring
 - Cost optimization
 
