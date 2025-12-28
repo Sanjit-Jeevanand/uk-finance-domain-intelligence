@@ -77,7 +77,12 @@ jobs:
             --region=$AR_REGION \
             --platform=managed \
             --allow-unauthenticated \
-            --port=8000
+            --port=8000 \
+            --cpu=2 \
+            --memory=4Gi \
+            --timeout=900 \
+            --min-instances=1 \
+            --concurrency=1
 
       - name: Run container
         run: |
