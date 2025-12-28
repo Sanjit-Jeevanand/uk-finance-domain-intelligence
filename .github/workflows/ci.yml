@@ -70,6 +70,15 @@ jobs:
           docker push $AR_IMAGE:${IMAGE_TAG}
           docker push $AR_IMAGE:latest
 
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy finance-dis \
+            --image=$AR_REGION-docker.pkg.dev/$AR_PROJECT/$AR_REPO/finance-dis:latest \
+            --region=$AR_REGION \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8000
+
       - name: Run container
         run: |
           docker run -d \

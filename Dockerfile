@@ -22,7 +22,7 @@ RUN pip install --upgrade pip \
 # Preload sentence-transformers model at build time into /models
 RUN python - <<EOF
 from sentence_transformers import SentenceTransformer
-SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", cache_folder="/models")
+SentenceTransformer("all-MiniLM-L6-v2")
 EOF
 
 

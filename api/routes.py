@@ -7,6 +7,16 @@ router = APIRouter()
 rag_service = RAGService()
 llm_service = LLMService()
 
+# in api/main.py
+
+@router.get("/")
+def root():
+    return {
+        "service": "finance-dis",
+        "status": "running",
+        "docs": "/docs",
+        "health": "/health"
+    }
 
 @router.get("/health")
 def health_check():

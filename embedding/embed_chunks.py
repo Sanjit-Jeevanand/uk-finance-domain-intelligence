@@ -24,7 +24,10 @@ def load_chunks():
     return chunks
 
 def main():
-    model = SentenceTransformer(MODEL_NAME)
+    model = SentenceTransformer(
+        MODEL_NAME,
+        local_files_only=True
+    )
 
     chunks = load_chunks()
     texts = [c["text"] for c in chunks]
