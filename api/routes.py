@@ -25,11 +25,15 @@ def health_check():
 @router.post("/query", response_model=QueryResponse)
 def query_endpoint(request: QueryRequest):
 
-    filters = {
-        "company": request.company,
-        "fiscal_year": request.fiscal_year,
-        "report_type": "annual_report",
-    }
+    filters = {}
+
+    if request.company:
+        filters["company"] = request.company
+
+    if request.fiscal_year:
+        filters["fiscal_year"] = request.fiscal_year
+
+    filters["report_type"] = "annual_report"
 
     result = rag_service.retrieve(
         query=request.query,

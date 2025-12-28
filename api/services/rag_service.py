@@ -45,7 +45,10 @@ class RAGService:
                 top_k=top_k * 2,
             )
 
-            filtered = apply_filters(results, filters)
+            if filters and any(v not in (None, "", []) for v in filters.values()):
+                filtered = apply_filters(results, filters)
+            else:
+                filtered = results
 
             evidence_context = build_evidence_context(
                 filtered[:top_k]
