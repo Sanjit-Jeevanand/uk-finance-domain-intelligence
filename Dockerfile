@@ -22,7 +22,7 @@ RUN pip install --upgrade pip \
 # Preload sentence-transformers model at build time into /models
 RUN python - <<EOF
 from sentence_transformers import SentenceTransformer
-SentenceTransformer("all-MiniLM-L6-v2")
+SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 EOF
 
 
@@ -34,6 +34,8 @@ ENV TRANSFORMERS_CACHE=/models
 ENV SENTENCE_TRANSFORMERS_HOME=/models
 ENV TRANSFORMERS_OFFLINE=1
 ENV HF_HUB_OFFLINE=1
+ENV HF_HUB_DISABLE_TELEMETRY=1
+ENV HF_DATASETS_OFFLINE=1
 
 # Create non-root user
 RUN useradd -m appuser
