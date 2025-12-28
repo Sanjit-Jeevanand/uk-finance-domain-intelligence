@@ -277,27 +277,42 @@ The focus is on system correctness rather than benchmark scores.
 
 ```
 uk-finance-domain-intelligence/
-├── api/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                # CI/CD pipeline (build, test, deploy)
+│
+├── api/                           # FastAPI backend (RAG service)
 │   ├── main.py
 │   ├── routes.py
 │   └── services/
 │       └── rag_service.py
-├── retrieval/
-│   ├── embed_query.py
-│   ├── similarity_search.py
-│   ├── filters.py
-│   └── build_evidence.py
-├── ui/
+│
+├── ui/                            # Streamlit web UI
 │   ├── app.py
 │   └── requirements.txt
-├── docker/
-│   ├── Dockerfile.api
-│   └── Dockerfile.ui
-├── .github/
-│   └── workflows/
-│       └── ci.yml
-├── README.md
-└── requirements.txt
+│
+├── ingestion/                     # Document ingestion pipelines
+├── processing/                    # Text cleaning & chunking
+├── embedding/                     # Embedding generation logic
+├── retrieval/                     # FAISS search, filters, evidence building
+├── vectorstore/                   # Persisted FAISS indexes & metadata
+├── llm/                           # LLM prompt & generation logic
+│
+├── data_sources/                  # Declared external document sources
+├── data/                          # Raw / processed document data
+│
+├── tests/                         # Unit and integration tests
+├── misc/                          # Experiments, scratch, notes (non-core)
+│
+├── .llm_cache/                    # Local LLM cache (ignored in production)
+├── .dockerignore
+├── .gitattributes
+├── docker-compose.yml             # Local multi-service dev (API + UI)
+├── Dockerfile                     # Production container build
+├── requirements.txt               # Backend dependencies
+│
+├── OBSERVABILITY.md               # Logging & monitoring notes
+└── README.md                      # Project documentation
 ```
 
 ---
@@ -331,14 +346,6 @@ These are optional enhancements beyond the core system.
 
 ---
 
-## Success Criteria
-
-The project is successful if the following statement is true:
-
-> “I built and deployed a finance-domain AI system that answers questions over real UK financial documents with grounded, citation-backed responses.”
-
----
-
 ## Disclaimer
 
 This project is for educational and portfolio purposes only and does not constitute financial advice.
@@ -347,4 +354,4 @@ This project is for educational and portfolio purposes only and does not constit
 
 ## Author
 
-Built as a structured ML engineering portfolio project.
+Sanjit Jeevanand
