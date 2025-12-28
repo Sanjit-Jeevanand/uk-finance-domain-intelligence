@@ -3,7 +3,7 @@ import streamlit as st
 import requests
 import re
 
-API_BASE_URL = "http://localhost:8001"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8001")
 
 st.title("UK Finance Domain Intelligence")
 st.write("Ask questions about UK finance data and get answers with cited evidence.")
@@ -14,38 +14,41 @@ with st.form("query_form"):
     query = st.text_area("Ask a question")
 
     with st.expander("Filters (optional)"):
-        companies = [
-            "Barclays",
-            "BP",
-            "HSBC",
-            "Lloyds Banking Group",
-            "NatWest Group",
-            "Shell",
-            "Tesco",
-            "Vodafone",
-        ]
+        enable_filters = st.checkbox("Enable filters", value=False)
 
-        company = st.selectbox(
-            "Company",
-            options=["Any"] + companies,
-            index=0,
-        )
+        if enable_filters:
+            companies = [
+                "Barclays",
+                "BP",
+                "HSBC",
+                "Lloyds Banking Group",
+                "NatWest Group",
+                "Shell",
+                "Tesco",
+                "Vodafone",
+            ]
 
-        fiscal_year = st.number_input(
-            "Fiscal Year",
-            min_value=1900,
-            max_value=2100,
-            value=2024,
-            step=1,
-            help="Used only to filter documents, not to influence reasoning.",
-        )
+            company = st.selectbox(
+                "Company",
+                options=["Any"] + companies,
+                index=0,
+            )
 
-        top_k = st.slider(
-            "Number of evidence chunks (top_k)",
-            min_value=1,
-            max_value=10,
-            value=3,
-        )
+            fiscal_year = st.number_input(
+                "Fiscal Year",
+                min_value=1900,
+                max_value=2100,
+                value=2024,
+                step=1,
+                help="Used only to filter documents, not to influence reasoning.",
+            )
+
+            top_k = st.slider(
+                "Number of evidence chunks (top_k)",
+                min_value=1,
+                max_value=10,
+                value=3,
+            )
 
     submitted = st.form_submit_button("Submit")
 
@@ -57,14 +60,15 @@ if submitted:
             "query": query
         }
 
-        filters = {}
-        if company != "Any":
-            filters["company"] = company
+        if enable_filters:
+            filters = {}
+            if company != "Any":
+                filters["company"] = company
 
-        filters["fiscal_year"] = fiscal_year
-        filters["top_k"] = top_k
+            filters["fiscal_year"] = fiscal_year
+            filters["top_k"] = top_k
 
-        payload.update(filters)
+            payload.update(filters)
 
         try:
             response = requests.post(f"{API_BASE_URL}/query", json=payload)
