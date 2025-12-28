@@ -77,8 +77,44 @@ jobs:
             --region=$AR_REGION \
             --platform=managed \
             --allow-unauthenticated \
+            --port=8000 \
             --cpu=2 \
             --memory=4Gi \
             --timeout=900 \
             --min-instances=1 \
-            --concurrency=1 \
+            --concurrency=1
+
+      - name: Run container
+        run: |
+          docker run -d \
+            -p 8000:8000 \
+            --name finance-dis-test \
+            -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+            $IMAGE_NAME:${IMAGE_TAG}
+
+      - name: Wait for API startup
+        run: |
+          echo "Waiting for API to become healthy..."
+          for i in {1..30}; do
+            if curl --fail http://localhost:8000/health; then
+              echo "API is up!"
+              exit 0
+            fi
+            echo "Still starting... ($i)"
+            sleep 2
+          done
+          echo "API failed to start in time"
+          docker logs finance-dis-test
+          exit 1
+
+      - name: Health check
+        run: |
+          curl --fail http://localhost:8000/health
+      
+      - name: Dump container logs
+        if: failure()
+        run: docker logs finance-dis-test
+
+      - name: Stop container
+        if: always()
+        run: docker stop finance-dis-test || true

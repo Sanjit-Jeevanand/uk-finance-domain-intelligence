@@ -55,10 +55,8 @@ COPY data/embeddings /app/data/embeddings
 # Permissions
 RUN chown -R appuser:appuser /app /models
 
-RUN pip install --no-cache-dir supervisor
-
-COPY supervisord.conf /app/supervisord.conf
-
 USER appuser
 
-CMD ["supervisord", "-c", "/app/supervisord.conf"]
+CMD uvicorn api.main:app \
+  --host 0.0.0.0 \
+  --port $PORT
