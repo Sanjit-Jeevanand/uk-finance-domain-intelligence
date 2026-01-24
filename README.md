@@ -3,7 +3,7 @@
 ## 🚀 Live Deployment
 
 - **API (Cloud Run):** https://finance-dis-521270728838.europe-west1.run.app
-- **Web UI (Streamlit):** https://finance-dis-ui-521270728838.europe-west1.run.app
+- **Web UI (Streamlit):** https://uk-finance-domain-intelligence.streamlit.app
 
 The system is fully deployed on Google Cloud Platform using a container-first workflow.
 
