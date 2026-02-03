@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UK Finance Domain Intelligence System - Production RAG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            950: '#020617',
+                            900: '#0f172a',
+                            850: '#0b1221',
+                            800: '#1e293b',
+                            700: '#334155',
+                        },
+                        indigo: {
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                        }
+                    },
+                    animation: {
+                        'flow': 'flow 25s linear infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        flow: {
+                            '0%': { transform: 'translateX(-100%) translateY(0px)', opacity: '0' },
+                            '10%': { opacity: '1' },
+                            '90%': { opacity: '1' },
+                            '100%': { transform: 'translateX(100vw) translateY(-20px)', opacity: '0' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #020617;
+            color: #e2e8f0;
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .node-active {
+            fill: #818cf8;
+            filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.6));
+            stroke: #a78bfa;
+            stroke-width: 2px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .node-inactive {
+            fill: #1e293b;
+            stroke: #334155;
+            stroke-width: 1px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .connection-line {
+            stroke: #1e293b;
+            stroke-width: 1.5;
+            transition: all 0.5s ease;
+        }
+        .connection-active {
+            stroke: #4f46e5;
+            stroke-width: 2;
+            filter: drop-shadow(0 0 3px rgba(79, 70, 229, 0.4));
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(129, 140, 248, 0.08);
+        }
+        .section-fade {
+            opacity: 0.25;
+            transition: opacity 0.5s ease;
+        }
+        .section-visible {
+            opacity: 1;
+        }
+        .doc-flow {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, rgba(129, 140, 248, 0.15), transparent);
+            height: 1px;
+            width: 100px;
+            animation: flow 20s linear infinite;
+        }
+        .choice-card {
+            border-left: 2px solid #334155;
+            transition: all 0.3s ease;
+        }
+        .choice-card:hover {
+            border-left-color: #818cf8;
+            background: rgba(129, 140, 248, 0.03);
+        }
+        /* Typography refinements */
+        .prose p {
+            margin-bottom: 1.25em;
+            line-height: 1.75;
+        }
+        .prose strong {
+            color: #f1f5f9;
+            font-weight: 500;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-panel border-b border-slate-800/50">
+        <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="font-mono text-xs font-semibold text-indigo-400 tracking-wider uppercase">
+                UK_Finance_RAG_V1.0
+            </div>
+            <div class="hidden md:flex gap-8 text-xs font-medium text-slate-400">
+                <a href="#architecture" class="hover:text-indigo-400 transition-colors">Architecture</a>
+                <a href="https://github.com/Sanjit-Jeevanand/uk-finance-domain-intelligence" target="_blank" class="hover:text-indigo-400 transition-colors flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    Source
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center pt-14 overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950/30 via-slate-950 to-slate-950"></div>
+        
+        <!-- Animated document flows -->
+        <div class="doc-flow" style="top: 25%; animation-delay: 0s; width: 150px;"></div>
+        <div class="doc-flow" style="top: 45%; animation-delay: 5s; width: 120px;"></div>
+        <div class="doc-flow" style="top: 65%; animation-delay: 10s; width: 180px;"></div>
+        <div class="doc-flow" style="top: 35%; animation-delay: 15s; width: 90px;"></div>
+        
+        <!-- Grid -->
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20"></div>
+
+        <div class="relative z-10 max-w-4xl mx-auto px-6 text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-700/50 text-[10px] font-mono text-indigo-400 mb-8 tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+                PRODUCTION RAG SYSTEM
+            </div>
+            
+            <h1 class="text-4xl md:text-6xl font-semibold tracking-tight mb-6 leading-[1.1] text-slate-50">
+                UK Finance Domain<br/>
+                <span class="gradient-text">Intelligence System</span>
+            </h1>
+            
+            <p class="text-base md:text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+                A production-grade Retrieval-Augmented Generation system for answering questions over real UK financial documents — with evidence, traceability, and deployment realism.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="#architecture" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-md transition-all hover:scale-105 shadow-lg shadow-indigo-500/20">
+                    Explore the Architecture
+                </a>
+                <a href="https://finance-dis-ui-521270728838.europe-west1.run.app" target="_blank" class="px-6 py-3 bg-emerald-600/80 hover:bg-emerald-500 text-white text-sm font-medium rounded-md transition-all hover:scale-105 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Live Demo
+                </a>
+            </div>
+
+            <div class="mt-12 flex justify-center gap-8 text-[10px] text-slate-600 font-mono uppercase tracking-widest">
+                <span>Evidence Grounding</span>
+                <span class="text-slate-700">•</span>
+                <span>Traceability</span>
+                <span class="text-slate-700">•</span>
+                <span>Deployment Realism</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Concept Section -->
+    <section class="py-20 border-t border-slate-800/50 bg-slate-950/30">
+        <div class="max-w-3xl mx-auto px-6">
+            <h2 class="text-2xl md:text-3xl font-semibold mb-8 text-slate-100 tracking-tight">
+                Machine Learning Systems Are About<br/>
+                <span class="text-slate-500">Trust, Not Text</span>
+            </h2>
+            
+            <div class="prose prose-slate max-w-none text-slate-400 leading-relaxed">
+                <p class="text-lg text-slate-300 font-light mb-6">
+                    Most RAG demos stop at "the model gave the right answer."
+                </p>
+                
+                <p class="mb-6">
+                    This system asks a harder question: <strong>Why should you trust the answer at all?</strong>
+                </p>
+                
+                <p class="mb-6">
+                    Financial documents are long, dense, and ambiguous. Large language models are powerful — but unreliable when left alone.
+                </p>
+                
+                <p class="mb-8">
+                    This project treats retrieval-augmented generation as a <span class="text-indigo-400 font-medium">systems problem</span>, not a prompting problem.
+                </p>
+                
+                <p class="mb-6">Rather than optimizing for fluency, the system is designed around:</p>
+                
+                <div class="grid md:grid-cols-2 gap-3 my-8 not-prose">
+                    <div class="p-4 rounded bg-slate-900/50 border border-slate-800">
+                        <div class="font-mono text-indigo-400 text-[10px] mb-1 uppercase tracking-wider">01</div>
+                        <div class="text-sm font-medium text-slate-200">Evidence Grounding</div>
+                    </div>
+                    <div class="p-4 rounded bg-slate-900/50 border border-slate-800">
+                        <div class="font-mono text-indigo-400 text-[10px] mb-1 uppercase tracking-wider">02</div>
+                        <div class="text-sm font-medium text-slate-200">Traceability</div>
+                    </div>
+                    <div class="p-4 rounded bg-slate-900/50 border border-slate-800">
+                        <div class="font-mono text-indigo-400 text-[10px] mb-1 uppercase tracking-wider">03</div>
+                        <div class="text-sm font-medium text-slate-200">Deployment Realism</div>
+                    </div>
+                    <div class="p-4 rounded bg-slate-900/50 border border-slate-800">
+                        <div class="font-mono text-indigo-400 text-[10px] mb-1 uppercase tracking-wider">04</div>
+                        <div class="text-sm font-medium text-slate-200">Observability</div>
+                    </div>
+                    <div class="p-4 rounded bg-slate-900/50 border border-slate-800 md:col-span-2">
+                        <div class="font-mono text-indigo-400 text-[10px] mb-1 uppercase tracking-wider">05</div>
+                        <div class="text-sm font-medium text-slate-200">Failure Transparency</div>
+                    </div>
+                </div>
+                
+                <p class="text-slate-300 text-sm leading-relaxed border-l-2 border-indigo-500/50 pl-4 my-8">
+                    Every answer is backed by retrieved source passages, attributable to a specific document and page range, generated by a stateless, production-ready API, visible through a simple but honest UI.
+                </p>
+                
+                <p class="text-slate-200 font-medium text-sm">
+                    This is not a chatbot. It is a document intelligence pipeline.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Architecture Section -->
+    <section id="architecture" class="relative">
+        <div class="flex flex-col lg:flex-row min-h-screen">
+            
+            <!-- Left Content -->
+            <div class="lg:w-3/5 w-full">
+                <div class="px-6 py-20 max-w-2xl mx-auto lg:mx-0 lg:ml-auto lg:pr-20 space-y-24">
+                    
+                    <!-- Section 1 -->
+                    <div id="section-1" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">01</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Document Registry</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>The system begins with a declarative registry of financial documents.</p>
+                            <p>Each document is defined by:</p>
+                            <ul class="list-disc list-inside space-y-1 ml-4 font-mono text-xs text-slate-500">
+                                <li>company</li>
+                                <li>fiscal year</li>
+                                <li>report type</li>
+                                <li>source URL</li>
+                            </ul>
+                            <div class="p-3 bg-amber-950/20 border border-amber-900/30 rounded mt-4">
+                                <p class="text-amber-200/80 text-xs font-mono">No document is processed unless it is explicitly declared.</p>
+                            </div>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>This creates reproducibility, auditability, and clear provenance. Nothing "just appears" in the system.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">Declarative registry</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> YAML-based document registry listing company, fiscal year, report type, and source URL.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> Hardcoding URLs, dynamic crawling, manual uploads</p>
+                                <p><span class="text-indigo-400">Why:</span> Explicit declaration equals reproducibility. Prevents accidental ingestion and mimics production data contracts.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2 -->
+                    <div id="section-2" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">02</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">PDF Ingestion</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>Registered documents are downloaded as immutable artifacts.</p>
+                            <p>Files are stored by company, year, and report type. Duplicate downloads are skipped.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>Raw documents are treated as source-of-truth artifacts, not transient inputs.</p>
+                        </div>
+                    </div>
+
+                    <!-- Section 3 -->
+                    <div id="section-3" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">03</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Text Extraction</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>PDFs are converted to raw text using page-aware extraction. Each page is explicitly marked. Failures are surfaced early.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>Page boundaries are preserved so that citations remain meaningful later.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">Preserve page boundaries</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> Extract text page-by-page with explicit markers, preserving ordering and structure.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> Full-text blob dumping, aggressive OCR, layout stripping</p>
+                                <p><span class="text-indigo-400">Why:</span> Citations require page awareness. Financial reports are page-referenced; losing structure kills explainability.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4 -->
+                    <div id="section-4" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">04</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Text Normalization</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">Conservative cleanup</p>
+                            <p>The extracted text undergoes conservative cleanup:</p>
+                            <ul class="list-disc list-inside space-y-1 ml-4 text-xs">
+                                <li>Remove obvious headers/footers</li>
+                                <li>Normalize page markers</li>
+                                <li>Preserve original wording</li>
+                            </ul>
+                            <div class="p-3 bg-red-950/20 border border-red-900/30 rounded mt-4">
+                                <p class="text-red-300 text-xs font-bold mb-1">NO SEMANTIC REWRITING</p>
+                                <p class="text-red-200/70 text-xs">No aggressive cleaning.</p>
+                            </div>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>RAG systems fail when preprocessing distorts meaning. This phase optimizes for <span class="text-slate-200">fidelity, not prettiness</span>.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">Conservative cleanup</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> Remove obvious headers/footers, normalize whitespace, preserve original wording. No semantic rewriting.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> Heavy regex, sentence rewriting, LLM-based cleanup</p>
+                                <p><span class="text-indigo-400">Why:</span> RAG systems break when semantics distort. Financial language is precise — don't rewrite it. Fidelity over aesthetics.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 5 -->
+                    <div id="section-5" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">05</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Chunking & Metadata</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>Documents are split into overlapping chunks bounded by character length, page-traceable, and metadata-rich.</p>
+                            <p>Each chunk inherits company, year, document ID, and page range.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>Chunks become the atomic unit of retrieval. Traceability is built in, not bolted on.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">Fixed-size overlapping chunks</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> Character-bounded chunks (~1200 chars) with overlap (~150 chars) and chunk-level metadata.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> Sentence-based, section-based, no overlap</p>
+                                <p><span class="text-indigo-400">Why:</span> Simple and predictable. Overlap prevents boundary loss. Metadata enables filtering. Optimized for retrieval stability, not theoretical optimality.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 6 -->
+                    <div id="section-6" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">06</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Embedding Generation</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>Each chunk is embedded using a sentence-transformer model. Embeddings are deterministic, normalized, and stored once.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>This enables efficient semantic similarity without model inference at query time.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">Sentence-Transformers MiniLM</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> <code class="text-indigo-400">sentence-transformers/all-MiniLM-L6-v2</code>
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> OpenAI embeddings, larger SBERT, Instructor models, domain-specific</p>
+                                <p><span class="text-indigo-400">Why:</span> Fast, small, deterministic, excellent performance per parameter, no API dependency. Signals "I know when not to over-engineer."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 7 -->
+                    <div id="section-7" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">07</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Vector Store (FAISS)</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>Embeddings are stored in a FAISS index loaded at API startup.</p>
+                            <p>The index is read-only in production, fast, and memory-resident.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>FAISS provides predictable latency without external dependencies.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">FAISS (in-memory)</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> FAISS index loaded at startup, read-only during serving.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> Pinecone, Weaviate, Milvus, ElasticSearch, Chroma</p>
+                                <p><span class="text-indigo-400">Why:</span> No external dependencies, zero per-query cost, predictable latency, industry-standard. Production realism: choose simplicity until scale demands otherwise.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 8 -->
+                    <div id="section-8" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">08</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Query Embedding</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>Incoming user queries are embedded using the same model as document chunks.</p>
+                            <div class="p-3 bg-slate-800/50 border border-slate-700 rounded mt-3 font-mono text-xs text-slate-400">
+                                No shortcuts. No mixing models.
+                            </div>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>Embedding symmetry prevents silent retrieval skew.</p>
+                        </div>
+                    </div>
+
+                    <!-- Section 9 -->
+                    <div id="section-9" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">09</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Semantic Retrieval</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>Top-K similar chunks are retrieved using vector similarity.</p>
+                            <p>The system retrieves more than needed, then narrows.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>Over-retrieval followed by filtering is safer than under-retrieval.</p>
+                        </div>
+                    </div>
+
+                    <!-- Section 10 -->
+                    <div id="section-10" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">10</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Metadata Filtering</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>Retrieved chunks are filtered by company, fiscal year, and document type (optional).</p>
+                            <p>Filters constrain retrieval, not generation.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>This prevents cross-company hallucination and leakage.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">Over-retrieve, then filter</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> Retrieve top-K×2, apply metadata filters after retrieval.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> Pre-filtering, exact K retrieval, no filtering</p>
+                                <p><span class="text-indigo-400">Why:</span> Vector similarity isn't perfect. Over-retrieval reduces false negatives; filtering enforces correctness constraints. Standard pattern in serious RAG.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 11 -->
+                    <div id="section-11" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">11</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Evidence Assembly</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>Filtered chunks are assembled into an evidence context with clearly separated passages and explicit source attribution.</p>
+                            <p>This context is the only information passed to the LLM.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>The LLM is not allowed to "know" anything else.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">Explicit context construction</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> Assemble chunks into structured context with clear separators. No free-form prompt stuffing.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> Raw chunk dumping, letting LLM decide relevance</p>
+                                <p><span class="text-indigo-400">Why:</span> Constrains the LLM's job, enables auditing, encourages extractive behavior. The model reasons over supplied facts, not latent knowledge.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 12 -->
+                    <div id="section-12" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">12</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">LLM Generation</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>The model generates an answer using the user query, the assembled evidence, and strict instructions to avoid speculation.</p>
+                            <p>Latency is measured. Failures are surfaced.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>Generation is the last step, not the core system.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">GPT-4.1-mini via Responses API</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> Smaller, cheaper, reliable reasoning model with explicit latency measurement.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> GPT-4 full, GPT-3.5, open-source models, fine-tuned models</p>
+                                <p><span class="text-indigo-400">Why:</span> Reasoning > verbosity, lower cost for repeated queries, faster responses. Right-sized model for task.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 13 -->
+                    <div id="section-13" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">13</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">API Response</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>The API returns the answer, cited evidence, and structured metadata.</p>
+                            <p>No UI assumptions are baked in.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>The API is reusable, testable, and production-oriented.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">FastAPI</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> FastAPI for API layer.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> Flask, Django, Node.js, LangChain servers</p>
+                                <p><span class="text-indigo-400">Why:</span> Strong typing, automatic OpenAPI docs, async-ready, production-grade, clean contracts. Signals "this is an API, not a script."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 14 -->
+                    <div id="section-14" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">14</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Observability & Logging</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>Each request logs retrieval latency, generation latency, model version, and request outcome.</p>
+                            <p>Logs are structured, not textual.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>Observability is how systems earn trust over time.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">Explicit logging</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> Log retrieval start/end, LLM generation latency, model version, request completion.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> No logging, print statements, full tracing stacks</p>
+                                <p><span class="text-indigo-400">Why:</span> Lightweight, Cloud Run compatible, sufficient for debugging. Production awareness without monitoring theater.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 15 -->
+                    <div id="section-15" class="section-content section-fade scroll-mt-24">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="flex items-center justify-center w-8 h-8 rounded bg-slate-800 border border-slate-700 font-mono text-indigo-400 text-xs font-bold">15</span>
+                            <div class="h-px flex-1 bg-slate-800"></div>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Streamlit UI</h3>
+                        <div class="space-y-3 text-sm text-slate-400 leading-relaxed">
+                            <p class="text-slate-300 font-medium text-sm">What happens here</p>
+                            <p>A simple UI enables natural-language queries, optional filters, and transparent citation display.</p>
+                            <p>The UI calls the hosted API directly.</p>
+                            <p class="text-slate-300 font-medium text-sm mt-4">Why this matters</p>
+                            <p>The UI proves the system works end-to-end — not just in code.</p>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">Streamlit (thin client)</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> Streamlit UI calling hosted API directly, displaying citations transparently.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> React, Next.js, Gradio, no UI</p>
+                                <p><span class="text-indigo-400">Why:</span> Fastest honest UI, minimal ceremony, easy demo, clean separation from backend. Communication over frontend mastery.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="choice-card p-4 rounded bg-slate-900/50 mt-6">
+                            <div class="flex items-baseline gap-2 mb-2">
+                                <span class="text-indigo-400 font-mono text-xs">ENGINEERING CHOICE</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 font-mono uppercase tracking-wider">Docker + Cloud Run</p>
+                            <p class="text-sm text-slate-400 mb-2">
+                                <strong class="text-slate-300">What we chose:</strong> Dockerized services, serverless Cloud Run, CI/CD via GitHub Actions.
+                            </p>
+                            <div class="space-y-2 text-xs text-slate-500">
+                                <p><span class="text-slate-600">Alternatives:</span> VMs, Kubernetes, local-only, platform-specific runtimes</p>
+                                <p><span class="text-indigo-400">Why:</span> Scales to zero, simple mental model, industry-relevant, minimal ops burden. Proves deployment understanding beyond notebooks.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Side: Architecture Chart -->
+            <div class="lg:w-2/5 w-full lg:h-screen lg:sticky lg:top-0 flex items-center justify-center p-6 bg-slate-950 border-l border-slate-800/50 relative">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-950/10 via-transparent to-transparent"></div>
+                <div class="relative w-full max-w-xs">
+                    <h4 class="text-[10px] font-mono text-slate-600 mb-6 text-center uppercase tracking-widest">Document Pipeline</h4>
+                    
+                    <svg viewBox="0 0 240 900" class="w-full h-auto">
+                        <defs>
+                            <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#4f46e5;stop-opacity:0.2" />
+                                <stop offset="50%" style="stop-color:#818cf8;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:0.2" />
+                            </linearGradient>
+                        </defs>
+                        
+                        <!-- Connection Lines -->
+                        <line x1="120" y1="25" x2="120" y2="55" class="connection-line" id="line-1" />
+                        <line x1="120" y1="75" x2="120" y2="105" class="connection-line" id="line-2" />
+                        <line x1="120" y1="125" x2="120" y2="155" class="connection-line" id="line-3" />
+                        <line x1="120" y1="175" x2="120" y2="205" class="connection-line" id="line-4" />
+                        <line x1="120" y1="225" x2="120" y2="255" class="connection-line" id="line-5" />
+                        <line x1="120" y1="275" x2="120" y2="305" class="connection-line" id="line-6" />
+                        <line x1="120" y1="325" x2="120" y2="355" class="connection-line" id="line-7" />
+                        <line x1="120" y1="375" x2="120" y2="405" class="connection-line" id="line-8" />
+                        <line x1="120" y1="425" x2="120" y2="455" class="connection-line" id="line-9" />
+                        <line x1="120" y1="475" x2="120" y2="505" class="connection-line" id="line-10" />
+                        <line x1="120" y1="525" x2="120" y2="555" class="connection-line" id="line-11" />
+                        <line x1="120" y1="575" x2="120" y2="605" class="connection-line" id="line-12" />
+                        <line x1="120" y1="625" x2="120" y2="655" class="connection-line" id="line-13" />
+                        <line x1="120" y1="675" x2="120" y2="705" class="connection-line" id="line-14" />
+                        
+                        <!-- Nodes -->
+                        <g class="cursor-pointer" onclick="scrollToSection(1)" onmouseenter="highlightNode(1)" onmouseleave="resetNode(1)">
+                            <circle cx="120" cy="25" r="10" class="node-inactive" id="node-1" />
+                            <text x="140" y="30" class="text-[9px] fill-slate-500 font-mono">Registry</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(2)" onmouseenter="highlightNode(2)" onmouseleave="resetNode(2)">
+                            <circle cx="120" cy="65" r="10" class="node-inactive" id="node-2" />
+                            <text x="140" y="70" class="text-[9px] fill-slate-500 font-mono">Ingestion</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(3)" onmouseenter="highlightNode(3)" onmouseleave="resetNode(3)">
+                            <circle cx="120" cy="115" r="10" class="node-inactive" id="node-3" />
+                            <text x="140" y="120" class="text-[9px] fill-slate-500 font-mono">Extraction</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(4)" onmouseenter="highlightNode(4)" onmouseleave="resetNode(4)">
+                            <circle cx="120" cy="165" r="10" class="node-inactive" id="node-4" />
+                            <text x="140" y="170" class="text-[9px] fill-slate-500 font-mono">Normalize</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(5)" onmouseenter="highlightNode(5)" onmouseleave="resetNode(5)">
+                            <circle cx="120" cy="215" r="10" class="node-inactive" id="node-5" />
+                            <text x="140" y="220" class="text-[9px] fill-slate-500 font-mono">Chunking</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(6)" onmouseenter="highlightNode(6)" onmouseleave="resetNode(6)">
+                            <circle cx="120" cy="265" r="10" class="node-inactive" id="node-6" />
+                            <text x="140" y="270" class="text-[9px] fill-slate-500 font-mono">Embed</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(7)" onmouseenter="highlightNode(7)" onmouseleave="resetNode(7)">
+                            <circle cx="120" cy="315" r="10" class="node-inactive" id="node-7" />
+                            <text x="140" y="320" class="text-[9px] fill-slate-500 font-mono">FAISS</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(8)" onmouseenter="highlightNode(8)" onmouseleave="resetNode(8)">
+                            <circle cx="120" cy="365" r="10" class="node-inactive" id="node-8" />
+                            <text x="140" y="370" class="text-[9px] fill-slate-500 font-mono">Query</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(9)" onmouseenter="highlightNode(9)" onmouseleave="resetNode(9)">
+                            <circle cx="120" cy="415" r="10" class="node-inactive" id="node-9" />
+                            <text x="140" y="420" class="text-[9px] fill-slate-500 font-mono">Retrieve</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(10)" onmouseenter="highlightNode(10)" onmouseleave="resetNode(10)">
+                            <circle cx="120" cy="465" r="10" class="node-inactive" id="node-10" />
+                            <text x="140" y="470" class="text-[9px] fill-slate-500 font-mono">Filter</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(11)" onmouseenter="highlightNode(11)" onmouseleave="resetNode(11)">
+                            <circle cx="120" cy="515" r="10" class="node-inactive" id="node-11" />
+                            <text x="140" y="520" class="text-[9px] fill-slate-500 font-mono">Evidence</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(12)" onmouseenter="highlightNode(12)" onmouseleave="resetNode(12)">
+                            <circle cx="120" cy="565" r="10" class="node-inactive" id="node-12" />
+                            <text x="140" y="570" class="text-[9px] fill-slate-500 font-mono">LLM</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(13)" onmouseenter="highlightNode(13)" onmouseleave="resetNode(13)">
+                            <circle cx="120" cy="615" r="10" class="node-inactive" id="node-13" />
+                            <text x="140" y="620" class="text-[9px] fill-slate-500 font-mono">API</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(14)" onmouseenter="highlightNode(14)" onmouseleave="resetNode(14)">
+                            <circle cx="120" cy="665" r="10" class="node-inactive" id="node-14" />
+                            <text x="140" y="670" class="text-[9px] fill-slate-500 font-mono">Logs</text>
+                        </g>
+                        
+                        <g class="cursor-pointer" onclick="scrollToSection(15)" onmouseenter="highlightNode(15)" onmouseleave="resetNode(15)">
+                            <rect x="110" y="710" width="20" height="20" rx="4" class="node-inactive" id="node-15" />
+                            <text x="140" y="725" class="text-[9px] fill-indigo-400 font-mono font-bold">UI</text>
+                        </g>
+                    </svg>
+                    
+                    <div class="mt-6 text-center">
+                        <p class="text-[10px] text-slate-600 font-mono uppercase tracking-wider mb-2">Navigate</p>
+                        <div class="w-4 h-8 border border-slate-700 rounded-full mx-auto flex justify-center pt-1">
+                            <div class="w-0.5 h-1.5 bg-slate-500 rounded-full animate-bounce"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Closing -->
+    <section class="py-20 border-t border-slate-800/50 bg-slate-950">
+        <div class="max-w-3xl mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-semibold mb-6 text-slate-100 tracking-tight">
+                Reliable AI Is <span class="gradient-text">Built, Not Prompted</span>
+            </h2>
+            
+            <p class="text-slate-400 mb-10 leading-relaxed">
+                This project demonstrates how to build an AI system that answers questions responsibly, 
+                exposes its evidence, survives deployment, and fails honestly.
+            </p>
+            
+            <div class="grid md:grid-cols-2 gap-4 max-w-lg mx-auto mb-12 text-left">
+                <div class="flex items-center gap-3 p-3 rounded bg-slate-900/50 border border-slate-800">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                    <span class="text-sm text-slate-300">Answers with evidence</span>
+                </div>
+                <div class="flex items-center gap-3 p-3 rounded bg-slate-900/50 border border-slate-800">
+                    <div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                    <span class="text-sm text-slate-300">Survives deployment</span>
+                </div>
+                <div class="flex items-center gap-3 p-3 rounded bg-slate-900/50 border border-slate-800">
+                    <div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div>
+                    <span class="text-sm text-slate-300">Fails honestly</span>
+                </div>
+                <div class="flex items-center gap-3 p-3 rounded bg-slate-900/50 border border-slate-800">
+                    <div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div>
+                    <span class="text-sm text-slate-300">Respects systems thinking</span>
+                </div>
+            </div>
+            
+            <p class="text-slate-600 font-mono text-xs uppercase tracking-widest">
+                Not by chasing novelty — but by respecting systems thinking.
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-10 border-t border-slate-800 bg-slate-950">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-slate-600 font-mono text-xs">
+                UK_FINANCE_RAG_V1.0
+            </div>
+            <a href="https://github.com/Sanjit-Jeevanand/uk-finance-domain-intelligence" target="_blank" 
+               class="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 text-xs rounded border border-slate-700 transition-all hover:scale-105">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                <span class="font-medium">View Source on GitHub</span>
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        // Intersection Observer for scroll-based highlighting
+        const observerOptions = {
+            root: null,
+            rootMargin: '-15% 0px -70% 0px',
+            threshold: 0
+        };
+
+        let currentActive = 1;
+        const totalNodes = 15;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id.split('-')[1];
+                    if (id) {
+                        setActiveNode(parseInt(id));
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.section-content').forEach(section => {
+            observer.observe(section);
+        });
+
+        function setActiveNode(index) {
+            for (let i = 1; i <= totalNodes; i++) {
+                const node = document.getElementById(`node-${i}`);
+                const line = document.getElementById(`line-${i}`);
+                
+                if (i <= index) {
+                    node.classList.remove('node-inactive');
+                    node.classList.add('node-active');
+                    if (line) {
+                        line.classList.remove('connection-line');
+                        line.classList.add('connection-active');
+                    }
+                } else {
+                    node.classList.remove('node-active');
+                    node.classList.add('node-inactive');
+                    if (line) {
+                        line.classList.remove('connection-active');
+                        line.classList.add('connection-line');
+                    }
+                }
+            }
+            currentActive = index;
+        }
+
+        function scrollToSection(num) {
+            const element = document.getElementById(`section-${num}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function highlightNode(num) {
+            const node = document.getElementById(`node-${num}`);
+            if (num !== currentActive) {
+                node.style.transform = 'scale(1.2)';
+                node.style.filter = 'drop-shadow(0 0 8px rgba(129, 140, 248, 0.6))';
+            }
+        }
+
+        function resetNode(num) {
+            if (num !== currentActive) {
+                const node = document.getElementById(`node-${num}`);
+                node.style.transform = 'scale(1)';
+                node.style.filter = '';
+            }
+        }
+
+        // Fade in sections
+        const fadeObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.remove('section-fade');
+                    entry.target.classList.add('section-visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.section-content').forEach(section => {
+            fadeObserver.observe(section);
+        });
+
+        // Initialize
+        setActiveNode(1);
+    </script>
+</body>
+</html>

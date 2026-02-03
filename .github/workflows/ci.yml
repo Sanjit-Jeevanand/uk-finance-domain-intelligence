@@ -15,7 +15,6 @@ env:
   AR_REGION: europe-west1
   AR_PROJECT: finance-dis-prod
   AR_REPO: finance-dis
-  UI_REPO: finance-dis-ui
 
 jobs:
   build-and-test:
@@ -49,11 +48,6 @@ jobs:
           IMAGE_NAME_LOWER=$(echo "${{ github.repository }}/finance-dis" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_NAME=${IMAGE_NAME_LOWER}" >> $GITHUB_ENV
 
-      - name: Set UI image name (lowercase)
-        run: |
-          UI_IMAGE_NAME_LOWER=$(echo "${{ github.repository }}/finance-dis-ui" | tr '[:upper:]' '[:lower:]')
-          echo "UI_IMAGE_NAME=${UI_IMAGE_NAME_LOWER}" >> $GITHUB_ENV
-
       - name: Build API Docker image
         run: |
           docker build \
@@ -61,17 +55,8 @@ jobs:
             -t $IMAGE_NAME:latest \
             .
 
-      - name: Build UI Docker image
+      - name: Tag & push API image
         run: |
-          docker build \
-            -t $UI_IMAGE_NAME:${IMAGE_TAG} \
-            -t $UI_IMAGE_NAME:latest \
-            -f ui/Dockerfile \
-            ui
-
-      - name: Tag & push API and UI images
-        run: |
-          # === API ===
           docker tag $IMAGE_NAME:${IMAGE_TAG} $REGISTRY/$IMAGE_NAME:${IMAGE_TAG}
           docker tag $IMAGE_NAME:latest $REGISTRY/$IMAGE_NAME:latest
           docker push $REGISTRY/$IMAGE_NAME:${IMAGE_TAG}
@@ -82,18 +67,6 @@ jobs:
           docker tag $IMAGE_NAME:latest $API_AR_IMAGE:latest
           docker push $API_AR_IMAGE:${IMAGE_TAG}
           docker push $API_AR_IMAGE:latest
-
-          # === UI ===
-          docker tag $UI_IMAGE_NAME:${IMAGE_TAG} $REGISTRY/$UI_IMAGE_NAME:${IMAGE_TAG}
-          docker tag $UI_IMAGE_NAME:latest $REGISTRY/$UI_IMAGE_NAME:latest
-          docker push $REGISTRY/$UI_IMAGE_NAME:${IMAGE_TAG}
-          docker push $REGISTRY/$UI_IMAGE_NAME:latest
-
-          UI_AR_IMAGE=$AR_REGION-docker.pkg.dev/$AR_PROJECT/$AR_REPO/finance-dis-ui
-          docker tag $UI_IMAGE_NAME:${IMAGE_TAG} $UI_AR_IMAGE:${IMAGE_TAG}
-          docker tag $UI_IMAGE_NAME:latest $UI_AR_IMAGE:latest
-          docker push $UI_AR_IMAGE:${IMAGE_TAG}
-          docker push $UI_AR_IMAGE:latest
 
       - name: Deploy to Cloud Run
         run: |
@@ -107,17 +80,3 @@ jobs:
             --timeout=900 \
             --min-instances=0 \
             --concurrency=20
-
-      - name: Deploy UI to Cloud Run
-        run: |
-          gcloud run deploy finance-dis-ui \
-            --image=$AR_REGION-docker.pkg.dev/$AR_PROJECT/$AR_REPO/finance-dis-ui:latest \
-            --region=$AR_REGION \
-            --platform=managed \
-            --allow-unauthenticated \
-            --port=8501 \
-            --memory=512Mi \
-            --cpu=1 \
-            --timeout=300 \
-            --min-instances=0 \
-            --set-env-vars=API_BASE_URL=https://finance-dis-521270728838.europe-west1.run.app

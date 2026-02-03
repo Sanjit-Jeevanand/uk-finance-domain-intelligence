@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UK Finance Domain Intelligence — Live Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            950: '#020617',
+                            900: '#0f172a',
+                            850: '#0b1221',
+                            800: '#1e293b',
+                            750: '#162032',
+                            700: '#334155',
+                        },
+                        indigo: {
+                            450: '#7c87f7',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                        },
+                        emerald: {
+                            450: '#10b981',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #020617;
+            color: #e2e8f0;
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .demo-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            box-shadow: 
+                0 0 0 1px rgba(99, 102, 241, 0.05),
+                0 20px 50px -10px rgba(0, 0, 0, 0.5),
+                0 0 100px -20px rgba(99, 102, 241, 0.15);
+        }
+        
+        .input-glow:focus {
+            box-shadow: 
+                0 0 0 1px rgba(99, 102, 241, 0.3),
+                0 0 20px rgba(99, 102, 241, 0.1);
+        }
+        
+        .source-card {
+            background: rgba(2, 6, 23, 0.6);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            transition: all 0.2s ease;
+        }
+        
+        .source-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+        }
+        
+        .example-chip {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            transition: all 0.2s ease;
+        }
+        
+        .example-chip:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #4f46e5 0%, #818cf8 100%);
+        }
+        
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+            color: #818cf8;
+            margin-left: 2px;
+        }
+        
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        
+        .expand-icon {
+            transition: transform 0.2s ease;
+        }
+        
+        .expand-icon.rotated {
+            transform: rotate(180deg);
+        }
+        
+        .evidence-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            color: #94a3b8;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        
+        /* Markdown-like prose */
+        .prose-custom p {
+            margin-bottom: 1em;
+            line-height: 1.75;
+        }
+        .prose-custom ul {
+            list-style: disc;
+            padding-left: 1.5em;
+            margin-bottom: 1em;
+        }
+        .prose-custom li {
+            margin-bottom: 0.5em;
+        }
+        .prose-custom strong {
+            color: #f1f5f9;
+            font-weight: 600;
+        }
+        
+        /* Pipeline step indicators */
+        .step-active {
+            color: #818cf8;
+        }
+        .step-inactive {
+            color: #334155;
+        }
+        .step-completed {
+            color: #10b981;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl">
+        <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-6 h-6 rounded bg-indigo-600 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                </div>
+                <div class="font-mono text-xs font-semibold text-slate-300 tracking-wider uppercase">
+                    UK Finance Intelligence
+                </div>
+            </div>
+            <div class="hidden md:flex gap-6 text-xs font-medium text-slate-400">
+                <a href="#demo" class="hover:text-indigo-400 transition-colors">Demo</a>
+                <a href="#architecture" class="hover:text-indigo-400 transition-colors">Architecture</a>
+                <a href="https://github.com/Sanjit-Jeevanand/uk-finance-domain-intelligence" target="_blank" class="hover:text-indigo-400 transition-colors flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-16 px-6 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950/30 via-slate-950 to-slate-950 pointer-events-none"></div>
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20 pointer-events-none"></div>
+        
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/80 border border-slate-700/50 text-[10px] font-mono text-indigo-400 mb-6 tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+                PRODUCTION RAG SYSTEM
+            </div>
+            
+            <h1 class="text-4xl md:text-5xl font-semibold tracking-tight mb-4 leading-[1.1] text-slate-50">
+                Query UK Financial Reports<br/>
+                <span class="gradient-text">With Grounded Evidence</span>
+            </h1>
+            
+            <p class="text-base text-slate-400 max-w-xl mx-auto leading-relaxed">
+                Ask natural-language questions about liquidity risks, regulatory concerns, and economic disclosures across major UK banks and corporates. Every answer is backed by retrieved source passages.
+            </p>
+        </div>
+    </section>
+
+    <!-- Live Demo Section -->
+    <section id="demo" class="flex-1 px-6 pb-20">
+        <div class="max-w-4xl mx-auto">
+            
+            <!-- Demo Card -->
+            <div class="demo-card rounded-2xl overflow-hidden">
+                
+                <!-- Card Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700/30 bg-slate-900/40">
+                    <div class="flex items-center gap-3">
+                        <div class="flex gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                        </div>
+                        <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider ml-2">Finance Intelligence API</span>
+                    </div>
+                    <div id="apiStatus" class="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        <span id="apiStatusText">Checking API…</span>
+                    </div>
+                </div>
+
+                <!-- Query Section -->
+                <div class="p-6 md:p-8">
+                    
+                    <!-- Input Area -->
+                    <div class="relative mb-6">
+                        <textarea 
+                            id="queryInput"
+                            class="w-full bg-slate-950/60 border border-slate-700/50 rounded-xl p-5 pr-16 text-slate-200 placeholder-slate-600 focus:outline-none input-glow transition-all resize-none text-base leading-relaxed min-h-[120px]"
+                            placeholder="What would you like to know about UK financial reports?"
+                        ></textarea>
+                        
+                        <!-- Submit Button -->
+                        <button 
+                            id="submitBtn"
+                            class="absolute bottom-4 right-4 p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            title="Submit query (Enter)"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </button>
+                        
+                        <!-- Keyboard hint -->
+                        <div class="absolute bottom-4 left-5 text-[10px] text-slate-600 font-mono hidden md:block">
+                            Shift + Enter for new line
+                        </div>
+                    </div>
+
+                    <!-- Filter Toggle -->
+                    <div class="mb-4">
+                        <button 
+                            id="filterToggle"
+                            class="flex items-center gap-2 text-[11px] text-slate-500 hover:text-slate-300 transition-colors group"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                            <span class="group-hover:text-indigo-400 transition-colors">Refine retrieval (optional)</span>
+                            <svg id="filterChevron" class="w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Filters Panel -->
+                    <div id="filtersPanel" class="hidden mb-6 p-4 rounded-xl bg-slate-950/40 border border-slate-800/50 animate-fade-in">
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <!-- Company -->
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-mono text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                                    Company
+                                    <span class="text-slate-600 text-[9px]">(optional)</span>
+                                </label>
+                                <select id="companyFilter" class="w-full bg-slate-900/80 border border-slate-700/50 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-colors">
+                                    <option value="">Any</option>
+                                    <option value="Barclays">Barclays</option>
+                                    <option value="BP">BP</option>
+                                    <option value="HSBC">HSBC</option>
+                                    <option value="Lloyds Banking Group">Lloyds Banking Group</option>
+                                    <option value="NatWest Group">NatWest Group</option>
+                                    <option value="Shell">Shell</option>
+                                    <option value="Tesco">Tesco</option>
+                                    <option value="Vodafone">Vodafone</option>
+                                </select>
+                            </div>
+
+                            <!-- Fiscal Year -->
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Fiscal Year</label>
+                                <input 
+                                    type="number" 
+                                    id="yearFilter"
+                                    value="2024"
+                                    min="1900"
+                                    max="2100"
+                                    class="w-full bg-slate-900/80 border border-slate-700/50 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-colors"
+                                >
+                            </div>
+
+                            <!-- Evidence Depth -->
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Evidence Depth</label>
+                                    <span id="topKValue" class="text-[10px] text-indigo-400 font-mono font-semibold">3</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    id="topKSlider"
+                                    min="1"
+                                    max="10"
+                                    value="3"
+                                    class="w-full h-1.5 bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-500"
+                                >
+                                <p class="text-[9px] text-slate-600 mt-1">Number of document chunks to retrieve</p>
+                            </div>
+                        </div>
+                        <p class="mt-3 text-[10px] text-slate-500 flex items-center gap-1.5">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Filters restrict document retrieval only — they do not influence reasoning.
+                        </p>
+                    </div>
+
+                    <!-- Example Questions -->
+                    <div>
+                        <p class="text-[10px] font-mono text-slate-600 uppercase tracking-wider mb-3">Try an example question</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="example-chip px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 cursor-pointer text-left" data-question="Summarise the liquidity risks Barclays highlighted in 2024">
+                                Liquidity risks at Barclays 2024
+                            </button>
+                            <button class="example-chip px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 cursor-pointer text-left" data-question="What economic crime risks did Lloyds Banking Group report?">
+                                Lloyds economic crime risks
+                            </button>
+                            <button class="example-chip px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 cursor-pointer text-left" data-question="What funding and liquidity risks were common across UK banks in 2024?">
+                                Common risks across UK banks
+                            </button>
+                            <button class="example-chip px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 cursor-pointer text-left" data-question="Did Barclays mention AI or automation-related regulatory risks?">
+                                Barclays AI regulatory risks
+                            </button>
+                            <button class="example-chip px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 cursor-pointer text-left" data-question="Which risks identified by UK banks are most sensitive to macroeconomic shocks?">
+                                Macroeconomic shock sensitivity
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="hidden border-t border-slate-700/30 bg-slate-900/30 p-6 md:p-8">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="relative">
+                            <div class="w-10 h-10 border-2 border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
+                            <div class="absolute inset-0 w-10 h-10 border-2 border-transparent border-t-indigo-400 rounded-full animate-spin" style="animation-duration: 1.5s;"></div>
+                        </div>
+                        <div class="space-y-1">
+                            <p id="loadingStep" class="text-sm text-slate-300 font-medium">Retrieving relevant financial disclosures...</p>
+                            <p class="text-[11px] text-slate-500 font-mono">Pipeline: Document Registry → Vector Search → Context Assembly → Generation</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="space-y-2">
+                        <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div id="progressBar" class="progress-bar h-full w-0 transition-all duration-700 ease-out rounded-full"></div>
+                        </div>
+                        <div class="flex justify-between text-[9px] font-mono">
+                            <span id="step1" class="step-active transition-colors">Retrieval</span>
+                            <span id="step2" class="step-inactive transition-colors">Context</span>
+                            <span id="step3" class="step-inactive transition-colors">Generation</span>
+                            <span id="step4" class="step-inactive transition-colors">Complete</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Answer Display -->
+                <div id="answerDisplay" class="hidden border-t border-slate-700/30 animate-slide-up">
+                    
+                    <!-- Answer Content -->
+                    <div class="p-6 md:p-8 pb-6">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="w-5 h-5 rounded bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <span class="text-[11px] font-mono text-emerald-400 uppercase tracking-wider">Generated Answer</span>
+                            <span class="ml-auto text-[10px] text-slate-500 font-mono" id="responseTime">~1.8s</span>
+                        </div>
+                        
+                        <div id="answerText" class="prose-custom text-sm text-slate-300">
+                            <!-- Answer injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Sources Section -->
+                    <div class="px-6 md:px-8 pb-6">
+                        <div class="flex items-center gap-2 mb-4">
+                            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                            <span class="text-[11px] font-mono text-indigo-400 uppercase tracking-wider">Sources & Evidence</span>
+                        </div>
+                        
+                        <div id="sourcesList" class="space-y-2">
+                            <!-- Sources injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Trust Footer -->
+                    <div class="px-6 md:px-8 py-4 bg-slate-950/30 border-t border-slate-700/20">
+                        <p class="text-[10px] text-slate-500 text-center leading-relaxed">
+                            Answers are generated only from retrieved documents. If sufficient evidence is not found, the system responds conservatively.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="p-4 rounded-xl bg-slate-900/30 border border-slate-800/30 text-center">
+                    <p class="text-2xl font-semibold text-slate-200">8</p>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-wider mt-1">Major Companies</p>
+                </div>
+                <div class="p-4 rounded-xl bg-slate-900/30 border border-slate-800/30 text-center">
+                    <p class="text-2xl font-semibold text-slate-200">2024</p>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-wider mt-1">Latest Reports</p>
+                </div>
+                <div class="p-4 rounded-xl bg-slate-900/30 border border-slate-800/30 text-center">
+                    <p class="text-2xl font-semibold text-slate-200">&lt;2s</p>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-wider mt-1">Avg Response</p>
+                </div>
+                <div class="p-4 rounded-xl bg-slate-900/30 border border-slate-800/30 text-center">
+                    <p class="text-2xl font-semibold text-slate-200">100%</p>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-wider mt-1">Grounded</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Architecture Teaser -->
+    <section id="architecture" class="py-20 border-t border-slate-800/50 bg-slate-950/50 px-6">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-2xl font-semibold text-slate-100 mb-4">Production-Grade Architecture</h2>
+            <p class="text-sm text-slate-400 mb-8 max-w-xl mx-auto">
+                Built with correctness, traceability, and deployment realism in mind. Every component is observable and every answer is attributable.
+            </p>
+            
+            <div class="flex flex-wrap justify-center gap-3 text-xs">
+                <span class="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 font-mono">FAISS Vector Store</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 font-mono">Sentence-Transformers</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 font-mono">FastAPI</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 font-mono">Cloud Run</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 font-mono">Structured Logging</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-slate-800 bg-slate-950 px-6">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-slate-600 font-mono text-xs">
+                UK_FINANCE_RAG_V1.0
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="https://finance-dis-ui-521270728838.europe-west1.run.app" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 text-xs rounded-lg border border-indigo-500/30 transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    Live Deployment
+                </a>
+                <a href="https://github.com/Sanjit-Jeevanand/uk-finance-domain-intelligence" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-400 text-xs rounded-lg border border-slate-700 transition-all">
+                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    Source
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const queryInput = document.getElementById('queryInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const filterToggle = document.getElementById('filterToggle');
+        const filtersPanel = document.getElementById('filtersPanel');
+        const filterChevron = document.getElementById('filterChevron');
+        const loadingState = document.getElementById('loadingState');
+        const answerDisplay = document.getElementById('answerDisplay');
+        const topKSlider = document.getElementById('topKSlider');
+        const topKValue = document.getElementById('topKValue');
+        const progressBar = document.getElementById('progressBar');
+
+        // Rotating placeholders
+        const placeholders = [
+            "Summarise the liquidity risks Barclays highlighted in 2024",
+            "What economic crime risks did Lloyds report?",
+            "What funding risks were common across UK banks in 2024?"
+        ];
+        let placeholderIndex = 0;
+
+        function rotatePlaceholder() {
+            if (queryInput.value === '' && document.activeElement !== queryInput) {
+                queryInput.placeholder = placeholders[placeholderIndex];
+                placeholderIndex = (placeholderIndex + 1) % placeholders.length;
+            }
+        }
+
+        setInterval(rotatePlaceholder, 4000);
+        rotatePlaceholder();
+
+        // Auto-focus on load
+        window.addEventListener('load', () => {
+            setTimeout(() => queryInput.focus(), 100);
+        });
+
+        // Filter toggle
+        filterToggle.addEventListener('click', () => {
+            const isHidden = filtersPanel.classList.contains('hidden');
+            if (isHidden) {
+                filtersPanel.classList.remove('hidden');
+                filterChevron.classList.add('rotate-180');
+            } else {
+                filtersPanel.classList.add('hidden');
+                filterChevron.classList.remove('rotate-180');
+            }
+        });
+
+        // TopK slider
+        topKSlider.addEventListener('input', (e) => {
+            topKValue.textContent = e.target.value;
+        });
+
+        // Example questions
+        document.querySelectorAll('.example-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const question = btn.dataset.question;
+                queryInput.value = question;
+                queryInput.focus();
+                
+                // Set appropriate filters based on question
+                if (question.includes('Barclays')) {
+                    document.getElementById('companyFilter').value = 'Barclays';
+                } else if (question.includes('Lloyds')) {
+                    document.getElementById('companyFilter').value = 'Lloyds Banking Group';
+                } else {
+                    document.getElementById('companyFilter').value = '';
+                }
+                
+                // Auto-expand filters if company selected
+                if (document.getElementById('companyFilter').value && filtersPanel.classList.contains('hidden')) {
+                    filtersPanel.classList.remove('hidden');
+                    filterChevron.classList.add('rotate-180');
+                }
+                
+                // Auto-submit
+                setTimeout(() => submitQuery(), 300);
+            });
+        });
+
+        // Submit handling
+        queryInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitQuery();
+            }
+        });
+
+        submitBtn.addEventListener('click', submitQuery);
+
+        // Update pipeline step visuals
+        function updatePipelineStep(step) {
+            const steps = ['step1', 'step2', 'step3', 'step4'];
+            steps.forEach((id, index) => {
+                const el = document.getElementById(id);
+                if (index < step) {
+                    el.className = 'step-completed transition-colors';
+                } else if (index === step) {
+                    el.className = 'step-active transition-colors';
+                } else {
+                    el.className = 'step-inactive transition-colors';
+                }
+            });
+        }
+
+let progressInterval = null;
+let progressStartTime = null;
+const MIN_PROGRESS_TIME_MS = 600;
+
+        function startDummyProgress() {
+            let progress = 0;
+            let step = 0;
+
+            progressStartTime = Date.now();
+
+            updatePipelineStep(0);
+            progressBar.style.width = "0%";
+
+            progressInterval = setInterval(() => {
+                progress += Math.random() * 12 + 6;
+
+                if (progress >= 95) progress = 95;
+
+                progressBar.style.width = `${progress}%`;
+
+                if (progress > 25 && step < 1) {
+                    step = 1;
+                    updatePipelineStep(1);
+                }
+                if (progress > 50 && step < 2) {
+                    step = 2;
+                    updatePipelineStep(2);
+                }
+                if (progress > 75 && step < 3) {
+                    step = 3;
+                    updatePipelineStep(3);
+                }
+            }, 400);
+        }
+
+        function stopDummyProgress() {
+            const elapsed = Date.now() - progressStartTime;
+            const remaining = Math.max(0, MIN_PROGRESS_TIME_MS - elapsed);
+
+            setTimeout(() => {
+                if (progressInterval) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                }
+
+                progressBar.style.width = "100%";
+                updatePipelineStep(3);
+            }, remaining);
+        }
+
+        async function submitQuery() {
+            const query = queryInput.value.trim();
+            if (!query) return;
+
+            submitBtn.disabled = true;
+            answerDisplay.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+
+            startDummyProgress();
+
+            const payload = { query };
+
+            const company = document.getElementById("companyFilter").value;
+            const fiscalYear = document.getElementById("yearFilter").value;
+            const topK = parseInt(topKSlider.value);
+
+            if (company) payload.company = company;
+            if (fiscalYear) payload.fiscal_year = parseInt(fiscalYear);
+            payload.top_k = topK;
+
+            try {
+                const response = await fetch("/query", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                stopDummyProgress();
+
+                document.getElementById("responseTime").textContent =
+                    data.latency_seconds
+                        ? `~${data.latency_seconds.toFixed(2)}s`
+                        : "~—";
+
+                displayAnswer({
+                    answer: data.answer,
+                    evidence: data.evidence || []
+                });
+
+                updatePipelineStep(3);
+                progressBar.style.width = '100%';
+
+                loadingState.classList.add('hidden');
+                answerDisplay.classList.remove('hidden');
+                submitBtn.disabled = false;
+
+                answerDisplay.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+            } catch (err) {
+                stopDummyProgress();
+                loadingState.classList.add('hidden');
+                submitBtn.disabled = false;
+
+                displayAnswer({
+                    answer: `<p class="text-red-400">Failed to query the system. Please try again.</p>`,
+                    evidence: []
+                });
+
+                answerDisplay.classList.remove('hidden');
+            }
+        }
+        function displayAnswer(data) {
+            const answerText = document.getElementById("answerText");
+            const sourcesList = document.getElementById("sourcesList");
+
+            answerText.innerHTML = `<p>${data.answer}</p>`;
+
+            if (!data.evidence.length) {
+                sourcesList.innerHTML = `
+                    <p class="text-xs text-slate-500">
+                        No cited evidence returned.
+                    </p>
+                `;
+                return;
+            }
+
+            sourcesList.innerHTML = data.evidence.map((src, idx) => `
+                <div class="source-card rounded-lg overflow-hidden">
+                    <button class="source-toggle w-full flex items-center justify-between p-3 text-left hover:bg-slate-900/50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="flex items-center justify-center w-5 h-5 rounded bg-indigo-950/50 text-indigo-400 text-[10px] font-bold border border-indigo-900/30">
+                                ${idx + 1}
+                            </span>
+                            <div>
+                                <p class="text-xs text-slate-300 font-medium">${src.company}</p>
+                                <p class="text-[10px] text-slate-500">
+                                    ${src.document} (pp. ${src.pages || "N/A"})
+                                </p>
+                            </div>
+                        </div>
+                        <svg class="w-4 h-4 text-slate-600 expand-icon transition-transform"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+
+                    <div class="source-content hidden border-t border-slate-800/30">
+                        <div class="p-3 bg-slate-950/50">
+                            <p class="text-[10px] text-slate-600 font-mono uppercase tracking-wider mb-2">
+                                Retrieved Evidence
+                            </p>
+                            <p class="evidence-text">${src.text}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join("");
+
+            document.querySelectorAll(".source-toggle").forEach(toggle => {
+                toggle.addEventListener("click", () => {
+                    const content = toggle.nextElementSibling;
+                    const icon = toggle.querySelector(".expand-icon");
+                    content.classList.toggle("hidden");
+                    icon.classList.toggle("rotated");
+                });
+            });
+        }
+        </script>
+        <script>
+        async function checkApiHealth() {
+            const statusEl = document.getElementById("apiStatus");
+            const textEl = document.getElementById("apiStatusText");
+
+            try {
+                const res = await fetch("/health", { cache: "no-store" });
+                if (res.ok) {
+                    statusEl.className = "flex items-center gap-2 text-[10px] font-mono text-emerald-400";
+                    textEl.textContent = "API Healthy";
+                    return;
+                }
+                throw new Error("Unhealthy");
+            } catch (err) {
+                statusEl.className =
+                    "flex items-center gap-2 text-[10px] font-mono text-red-400";
+                textEl.textContent = "API Unavailable";
+            }
+        }
+
+        checkApiHealth();
+        setInterval(checkApiHealth, 15000);
+        </script>
+</body>
+</html>

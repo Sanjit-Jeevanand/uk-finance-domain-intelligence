@@ -50,6 +50,7 @@ COPY --from=builder /models /models
 COPY api/ api/
 COPY retrieval/ retrieval/
 COPY llm/ llm/
+COPY ui/ ui/
 COPY data/embeddings /app/data/embeddings
 
 # Permissions
