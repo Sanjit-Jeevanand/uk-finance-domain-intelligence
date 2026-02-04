@@ -3,6 +3,7 @@
 ## 🚀 Live Deployment
 
 - **DEMO (Cloud Run):** https://finance-dis-521270728838.europe-west1.run.app
+- **Architecture:** https://storage.googleapis.com/uk-finance-domain-intelligence-site/index.html
 
 The system is fully deployed on Google Cloud Platform using a container-first workflow.
 
