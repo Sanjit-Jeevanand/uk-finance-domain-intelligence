@@ -972,26 +972,45 @@
         const API_HEALTH_URL =
           "https://finance-dis-521270728838.europe-west1.run.app/health";
 
-        function warmUpAPI() {
-          try {
-            fetch(API_HEALTH_URL, {
-              method: "GET",
-              mode: "cors",
-              cache: "no-store",
-              keepalive: true,
-            }).catch(() => {});
-          } catch (_) {}
+        function warmUpAPI(reason = "load") {
+          console.log("[warmup] sending health check:", reason);
+
+          // Primary warm-up request (will appear under Fetch/XHR in DevTools)
+          fetch(API_HEALTH_URL, {
+            method: "GET",
+            mode: "cors",
+            cache: "no-store",
+            credentials: "omit",
+          })
+            .then(() => {
+              console.log("[warmup] fetch completed");
+            })
+            .catch((err) => {
+              console.warn("[warmup] fetch failed", err);
+            });
+
+          // Secondary best-effort beacon (covers page unload / bfcache cases)
+          if (navigator.sendBeacon) {
+            try {
+              navigator.sendBeacon(API_HEALTH_URL);
+            } catch (_) {}
+          }
         }
 
-        // Warm up once on page load
-        window.addEventListener("load", () => {
-          warmUpAPI();
+        // Warm up on DOM ready (guaranteed to fire)
+        document.addEventListener("DOMContentLoaded", () => {
+          warmUpAPI("domcontentloaded");
         });
 
-        // Warm up again when tab becomes visible (handles prerender / bfcache cases)
+        // Warm up again on full load (after all assets)
+        window.addEventListener("load", () => {
+          warmUpAPI("load");
+        });
+
+        // Warm up when tab becomes visible (handles prerender / bfcache)
         document.addEventListener("visibilitychange", () => {
           if (document.visibilityState === "visible") {
-            warmUpAPI();
+            warmUpAPI("visibility");
           }
         });
     </script>
