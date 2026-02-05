@@ -968,6 +968,14 @@
 
         // Initialize
         setActiveNode(1);
+
+        const API_HEALTH_URL =
+            "https://finance-dis-521270728838.europe-west1.run.app/health";
+
+        // Fire-and-forget warmup on page load
+        window.addEventListener("load", () => {
+            fetch(API_HEALTH_URL, { mode: "no-cors" }).catch(() => {});
+        });
     </script>
 </body>
 </html>
