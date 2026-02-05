@@ -22,6 +22,7 @@ Interpretation guidance:
 
 Strict rules:
 - Output ONLY the final answer content.
+- If the year does not match the query return metadata, do not return an answer
 - Every factual claim MUST be supported by the provided context.
 - Use the provided page numbers for traceability.
 - Cite sources at the END of the answer, not inline.
