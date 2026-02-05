@@ -970,11 +970,29 @@
         setActiveNode(1);
 
         const API_HEALTH_URL =
-            "https://finance-dis-521270728838.europe-west1.run.app/health";
+          "https://finance-dis-521270728838.europe-west1.run.app/health";
 
-        // Fire-and-forget warmup on page load
+        function warmUpAPI() {
+          try {
+            fetch(API_HEALTH_URL, {
+              method: "GET",
+              mode: "cors",
+              cache: "no-store",
+              keepalive: true,
+            }).catch(() => {});
+          } catch (_) {}
+        }
+
+        // Warm up once on page load
         window.addEventListener("load", () => {
-            fetch(API_HEALTH_URL, { mode: "no-cors" }).catch(() => {});
+          warmUpAPI();
+        });
+
+        // Warm up again when tab becomes visible (handles prerender / bfcache cases)
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") {
+            warmUpAPI();
+          }
         });
     </script>
 </body>
